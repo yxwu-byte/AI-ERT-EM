@@ -1,5 +1,39 @@
 # AI-ERT-EM
 
+## Run in GitHub Codespaces
+
+1. Open this repository on GitHub, select **Code → Codespaces → Create codespace on main**.
+2. Wait for setup to install pyGIMLi and run the ERT example automatically.
+3. In the Codespaces terminal, run:
+
+   ```bash
+   source .venv/bin/activate
+   python examples/ert_forward.py
+   ```
+
+The example computes apparent resistivity for a homogeneous 100 ohm-m
+half-space and checks the results. The **Actions** tab runs the same check
+on pushes and pull requests; it can also be started manually.
+
+Create a `.ipynb` notebook in the Codespaces editor and select the `.venv`
+Python kernel to work interactively. Codespaces availability and usage limits
+depend on your GitHub account.
+
+## Run locally
+
+Use Python 3.12 from the repository root:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python examples/ert_forward.py
+```
+
+These workflows install the published pyGIMLi package and its compiled core.
+Changes to the source snapshot below require a separate source build to take
+effect in the installed package.
+
 ## pyGIMLi source
 
 The `pygimli-source/` directory contains an unmodified source snapshot of

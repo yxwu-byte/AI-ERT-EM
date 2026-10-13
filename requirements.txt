@@ -1,0 +1,5 @@
+pygimli==1.6.1
+matplotlib
+scipy
+jupyterlab
+ipywidgets
