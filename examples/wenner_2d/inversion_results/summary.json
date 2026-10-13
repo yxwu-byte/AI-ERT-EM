@@ -1,0 +1,20 @@
+{
+  "pygimli_version": "1.6.1",
+  "measurements": 1648,
+  "electrodes": 101,
+  "assumed_relative_error": 0.03,
+  "lambda_initial": 20.0,
+  "parameter_depth_m": 25,
+  "max_cell_area_m2": 4,
+  "model_cells": 2778,
+  "chi_squared": 0.2852803069274875,
+  "relative_rms_percent": 1.6060204323509006,
+  "resistivity_min_ohm_m": 2.7610949062671457,
+  "resistivity_max_ohm_m": 77.92022179214123,
+  "chi_squared_history": [
+    27.320951235298672,
+    2.444603753808417,
+    1.1047667791347975,
+    0.2852803069274875
+  ]
+}
