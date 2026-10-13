@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+r"""
+ERT field data with topography
+==============================
+
+Simple example of data measured over a slagdump demonstrating:
+
+- 2D inversion with topography
+- geometric factor generation
+- topography effect
+
+The data is the profile 11 already shown by :cite:`Guenther2006` (Fig. 11).
+"""
+# sphinx_gallery_thumbnail_number = 7
+import pygimli as pg
+from pygimli.physics import ert
+
+###############################################################################
+# Get some example data with, typically by a call like
+# data = ert.load("filename.dat")
+# that supports various file formats
+data = pg.getExampleData('ert/slagdump.ohm', verbose=True)
+print(data)
+
+###############################################################################
+# Let us first have a look at the topography contained in the data.
+# Hint. Using pg.plt applies lazy evaluated import of matplotlib.pyplot,
+# opens all figures in interactive mode and don't need a plt.show() at the end
+# of the script.
+# Let us first have a look at the topography contained in the data
+fig, ax = pg.plt.subplots()
+ax.plot(pg.x(data), pg.z(data), 'x-')
+ax.set_aspect(1.0)
+ax.set_xlabel('x [m]')
+ax.set_ylabel('z [m]')
+ax.grid(True)
+
+###############################################################################
+# The data file does not contain geometric factors (token field 'k'),
+# so we create them based on the given topography.
+data0 = data.copy()
+
+k0 = ert.createGeometricFactors(data, numerical=False, forceFlatEarth=True)
+data['k'] = ert.createGeometricFactors(data, numerical=True)
+
+###############################################################################
+# It might be interesting to see the topography effect, i.e the ratio between
+# the numerically computed geometry factor and the analytical formula after
+# :cite:`Ruecker2006`. We show it using a diverging colormap, 1 bring white.
+_ = ert.showData(data, vals=k0/ data['k'], label='Topography effect',
+                 cMin=2/3, cMax=3/2, logScale=True, cMap="bwr")
+
+###############################################################################
+# We can now compute the apparent resistivity and display it, once with the
+# wrong analytical formula and once with the numerical values in data['k']
+data['rhoa'] = data['r'] * data['k']
+kw = dict(cMin=6, cMax=33)
+fig, ax = pg.plt.subplots(ncols=2)
+data.show(data['r']*k0, ax=ax[0], **kw)
+data.show(ax=ax[1], **kw)
+ax[0].set_title('Uncorrected')
+ax[1].set_title('Corrected')
+
+###############################################################################
+# The data container does not necessarily contain data errors data errors
+# (token field 'err'), requiring us to enter data errors. We can let the
+# manager guess some defaults for us automatically or set them manually
+data.estimateError(relativeError=0.03, absoluteUError=5e-5)
+# which internally calls
+# data['err'] = ert.estimateError(data, ...)  # can also set manually
+_ = data.show(data['err']*100, label='error estimate (%)')
+
+###############################################################################
+# We initialize the ERTManager for further steps and eventually inversion.
+mgr = ert.ERTManager(data)
+
+###############################################################################
+# Now the data have all necessary fields ('rhoa', 'err' and 'k') so we can run
+# the inversion. The inversion mesh will be created with some optional values
+# for the parametric mesh generation.
+#
+mod = mgr.invert(data, lam=10, verbose=True,
+                 paraDX=0.3, paraMaxCellSize=10, paraDepth=20, quality=33.6)
+ax, cb = mgr.showResult()
+
+###############################################################################
+# We can view the resulting model in the usual way.
+_ = mgr.showResultAndFit()
+# np.testing.assert_approx_equal(ert.inv.chi2(), 1.10883, significant=3)
+
+###############################################################################
+# Or just plot the model only using your own options.
+ax, cb = mgr.showResult(mod, cMin=5, cMax=30, cMap="Spectral_r", logScale=True)

@@ -1,0 +1,118 @@
+# Files and filetypes exluded from version control
+# Python standard taken from https://github.com/github/gitignore/blob/master/Python.gitignore
+#
+
+# Documentation
+_build/
+doc/_tutorials_auto/
+doc/_examples_auto/
+binder/notebooks/
+_generated/
+# sidebar gallery is created on the fly
+doc/_templates/gallery.html
+doc/_static/usecases/original/
+*sg_execution_times.rst
+*.ipynb_checkpoints*
+*.ipynb
+doc/jupyter_execute/
+
+doc/user-guide/*_files
+doc/user-guide/*.html
+
+# Customizations
+*.log
+*.pdf
+*.bak
+.vscode/
+.pytest_cache
+
+# pyGIMLi
+command.history
+*.bmat
+*.vtk
+*.vtu
+*.bms
+*.vector
+*.vec
+*.xyz
+*.dat
+*.ves
+constraint.matrix
+chi.txt
+*.data
+*.poly
+
+# Gmsh
+*.geo.*
+*.geo
+*.msh
+
+# Mac
+*.DS_Store*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+*.dylib
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+
+# Translations
+*.mo
+*.pot
+
+# Misc
+test.py
+pygimli/core/libboost_python37-mt.dll
+pygimli/core/libgimli.dll
+gimli.code-workspace
+pygimli/core/*.dll
+.vscode/settings.json
+
+.vscode/launch.json
+python/git.exe.stackdump
+pygimli/core/libgimli.dll.back
+pygimli/core/_pygimli_.pyd.back
+pygimli/core/_pygimli_.so.dSYM/
+pygimli/VERSION
+synth.ves

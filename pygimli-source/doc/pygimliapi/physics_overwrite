@@ -1,0 +1,25 @@
+:html_theme.sidebar_secondary.remove: true
+
+pygimli.physics
+---------------
+
+.. currentmodule:: pygimli.physics
+
+.. automodule:: pygimli.physics
+
+.. rubric:: Module overview
+
+.. autosummary::
+  :toctree: .
+  :template: module.rst
+
+  em
+  ert
+  gravimetry
+  petro
+  seismics
+  SIP
+  sNMR
+  traveltime
+  petro
+  ves

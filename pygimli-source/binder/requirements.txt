@@ -1,0 +1,6 @@
+pygimli[all]
+tetgen
+matplotlib
+pyvista[jupyter]
+ipywidgets
+jupytext

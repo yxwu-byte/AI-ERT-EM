@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    This program is part of pygimli
+    Visit http://www.resistivity.net for further information or the latest
+    version.
+"""
+
+import sys
+import os
+
+import pygimli as pg
+
+
+def exportSens(meshfile, sensMatrix, outFilename, dataID, tol=1e-5,
+               save=False, saveTo='.'):
+    mesh = pg.Mesh(meshfile)
+    mesh.showInfos()
+
+    S = pg.RMatrix(sensMatrix)
+
+    savePath = os.path.abspath(saveTo)
+    try:
+        os.makedirs(savePath)
+    except OSError:
+        if os.path.exists(savePath):
+            # We are nearly safe
+            pass
+        else:
+            # There was an error on creation, so make sure we know about it
+            raise
+
+    if dataID == -1:
+        for i in range(0, S.rows()):
+            d = pg.prepExportSensitivityData(mesh, S[i](mesh.cellMarkers()), tol)
+
+            add = '0'*(len(str(S.rows()))-len(str(i)))
+            name = os.path.join(savePath, outFilename + "-" + add + str(i) + ".vec")
+
+            if save:
+                print("saving", name)
+                pg.save(d, name)
+            mesh.addExportData(name, d)
+    else:
+        d = pg.prepExportSensitivityData(mesh, S[dataID](mesh.cellMarkers()), tol)
+        name = os.path.join(savePath, outFilename + "-" + str(dataID) + ".vec")
+        if save:
+            print("saving", name)
+            pg.save(d, name)
+        mesh.addExportData(name, d)
+
+    mesh.exportVTK(outFilename)
+
+
+def main(argv):
+    from optparse import OptionParser
+
+    parser = OptionParser("usage: %prog [options] mesh",
+                          version="%prog: " + pg.__version__)
+
+    parser.add_option("-v", "--verbose", dest="verbose", action="store_true", default=False,
+                      help="Be verbose.")
+    parser.add_option(
+        "-s",
+        "--sensMatrix",
+        dest="sensMatrix",
+        metavar="File",
+        default='sens.bmat',
+        help="Sensitivity matrix")
+    parser.add_option(
+        "-i",
+        "--dataId",
+        dest="id",
+        type=int,
+        default=-1,
+        help="Export the data for the given id. -1 for all data.")
+
+    parser.add_option(
+        "-t",
+        "--tolerance",
+        dest="tolerance",
+        type=float,
+        default=1e-5,
+        help="Tolerance for Data preparation")
+    parser.add_option("-o", "--outFilename", metavar="File", dest="outFilename", default="sens",
+                      help="Set output filename [sens]")
+    parser.add_option("", "--save", dest="save", action="store_true",
+                      default=False,
+                      help="Save single sensitivity vector.")
+    parser.add_option("", "--save-to", metavar="PATH", dest="saveTo", default='.',
+                      help="Save single sensitivity vector into a given path. [.]")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) == 0:
+        parser.print_help()
+        print("Please add a mesh-file.")
+        sys.exit(2)
+    else:
+        meshfile = args[0]
+
+    if options.verbose:
+        print("meshfile =", meshfile)
+        print("sensMatrix =", options.sensMatrix)
+        print("out=", options.outFilename)
+        print("ith.", options.id)
+        print("tol=", options.tolerance)
+        print("save=", options.save)
+        print("saveTo=", options.saveTo)
+
+    if options.saveTo is not '.':
+        options.save = True
+
+    exportSens(meshfile, options.sensMatrix,
+               options.outFilename,
+               options.id, options.tolerance,
+               options.save, options.saveTo)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

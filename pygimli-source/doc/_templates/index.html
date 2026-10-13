@@ -1,0 +1,121 @@
+{%- extends "layout.html" %}
+{%- set title = "Home" %}
+
+{% block body %}
+
+<h1 class="display-5">
+  Open-source multi-method modelling and inversion in geophysics.
+</h1>
+<div class="d-flex flex-column flex-sm-row gap-2 mt-2">
+  <a class="btn btn-primary btn-lg" href="{{pathto('about')}}">
+    <i class="fas fa-book me-1"></i> Learn more
+  </a>
+  <a class="btn btn-success btn-lg text-white" href="{{pathto('user-guide/getting-started/index')}}">
+    <i class="fas fa-rocket me-1"></i> Getting started
+  </a>
+</div>
+
+<h1 class="mt-5">Showcase
+  <small class="text-muted">
+    pyGIMLi-based research papers
+  </small>
+</h1>
+<div id="paper-carousel" class="carousel slide" data-ride="carousel">
+  <div class="carousel-inner">
+    <!-- Carousel items -->
+    {%- for paper in showcase %}
+    <div class="carousel-item">
+      <div class="card-block">
+        <div class="row">
+          <div class="col-md-8">
+            <a href="{{ paper['link'] }}" target="_blank">
+              <img src="_static/usecases/{{ paper['img'] }}" align="center" width="100%">
+            </a>
+            <button class="carousel-control-prev" type="button" data-bs-target="#paper-carousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#paper-carousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+          <div class="col-md-4 align-center">
+
+            <div class="d-flex align-items-start flex-column bd-highlight mb-3" style="height: 80%;">
+              <div class="mb-auto p-2 bd-highlight">
+                <h4 class="mt-0">{{ paper["title"] }}</h4>
+                <p class="fs-6 text-muted">{{ paper["subtitle"] }}</p>
+              </div>
+              <div class="p-2 bd-highlight">
+                <a href="{{ paper['link'] }}" target="_blank">
+                  <button class="btn btn-outline-success mb-2 btn-sm">Go to {{ paper["subtitle"].split(',')[0]
+                    }}</button>
+                </a>
+                <a href="{{ pathto('publist') }}">
+                  <button class="btn btn-outline-secondary btn-sm">More pyGIMLi-based publications</button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {%- endfor %}
+    <!-- Carousel nav -->
+  </div>
+  <script>
+    ! function ($) {
+      $(function () {
+        // carousel demo
+        const items = document.querySelectorAll('#paper-carousel .carousel-item');
+        const randomItemNumber = Math.floor(Math.random() * items.length); //random number in range of items
+        items[randomItemNumber].classList.add('active');
+        $('#paper-carousel').carousel({
+          interval: 4500, // 4.5 sec
+          ride: "carousel"
+        })
+      })
+    }(window.jQuery)
+  </script>
+</div>
+
+<h1 class="mt-5">Get pyGIMLi.
+  <small class="text-muted">
+    Available for different platforms.
+    <i class="fab fa-windows"></i>
+    <i class="fab fa-linux"></i>
+    <i class="fab fa-apple"></i>
+  </small>
+</h1>
+pyGIMLi works on Windows, various Linux distributions and Mac OS. See the <a
+  href="{{pathto('user-guide/getting-started/installation')}}">installation section</a> for more details.
+<h1 class="mt-5">Get started.
+  <small class="text-muted">
+    Check out the tutorials.
+  </small>
+
+</h1>
+To get started, have a look at the
+<a href="{{pathto("_tutorials_auto/index")}}">pyGIMLi tutorials</a>. Applications and user stories can be found in
+the
+<a href="{{pathto("_examples_auto/index")}}">Example section</a>.
+
+<h1 class="mt-5">Get involved.
+  <small class="text-muted">
+    We want your help.
+  </small>
+</h1>
+You found a bug or desperately miss a certain functionality? Fill out a
+<a href="https://github.com/gimli-org/gimli/issues">bug report or a feature
+  request</a>. If you have used pyGIMLi for an interesting application, consider
+<a href="mailto:mail@pygimli.org">sending us</a> your example. Please <a
+  href="{{ pathto('about/citation') }}">cite the pyGIMLi paper</a> or derived ones when using it for scientific
+purposes.
+<div class="mb-2"></div>
+{% endblock body %}
+
+{# Secondary sidebar #}
+{% block docs_toc %}
+<div class="bd-sidebar-secondary bd-toc">{% include "sidebar.html" %}</div>
+{% endblock docs_toc %}
