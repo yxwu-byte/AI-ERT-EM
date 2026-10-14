@@ -1,0 +1,26 @@
+INFO: 
+simpeg.InvProblem is setting bfgsH0 to the inverse of the reg.deriv2.
+using the default solver SolverLU with the 'is_symmetric=True` option set.
+
+/workspace/AI-ERT-EM/SimPEG/.venv/lib/python3.12/site-packages/pymatsolver/wrappers.py:79: UnusedArgumentWarning: Unused keyword argument "is_symmetric" for splu.
+  self.kwargs = kwargs
+/workspace/AI-ERT-EM/SimPEG/.venv/lib/python3.12/site-packages/pymatsolver/wrappers.py:81: SparseEfficiencyWarning: splu converted its input to CSC format
+  self.solver = fun(self.A, **self.kwargs)
+INFO: Directive TargetMisfit: Target data misfit is 12.0
+
+Running inversion with SimPEG v0.25.2
+================================================= Projected GNCG =================================================
+  #     beta     phi_d     phi_m       f      |proj(x-g)-x|  LS   iter_CG   CG |Ax-b|/|b|  CG |Ax-b|   Comment   
+-----------------------------------------------------------------------------------------------------------------
+   0  5.57e+01  2.47e+02  0.00e+00  2.47e+02                         0           inf          inf                
+   1  5.57e+01  8.87e+01  1.88e-01  9.92e+01    8.24e+00      1      3        3.86e-16     2.07e-13              
+   2  5.57e+01  2.35e+01  6.12e-01  5.75e+01    8.07e+00      0      3        3.02e-15     1.38e-12   Skip BFGS  
+   3  2.78e+01  1.12e+01  7.11e-01  3.10e+01    9.11e+00      0      3        2.58e-15     1.19e-12   Skip BFGS  
+------------------------- STOP! -------------------------
+1 : |fc-fOld| = 9.4974e+00 <= tolF*(1+|f0|) = 2.4821e+01
+1 : |xc-x_last| = 1.2711e-01 <= tolX*(1+|x0|) = 7.7758e-01
+0 : |proj(x-g)-x|    = 9.1070e+00 <= tolG          = 1.0000e-01
+0 : |proj(x-g)-x|    = 9.1070e+00 <= 1e3*eps       = 1.0000e-02
+0 : maxIter   =      50    <= iter          =      3
+------------------------- DONE! -------------------------
+VALIDATION {"method": "fdem", "status": "passed", "n_data": 12, "n_parameters": 3, "random_seed": 42, "fixed_layer_thicknesses_m": [0.4, 1.2], "initial_weighted_rms": 4.538773727293685, "final_weighted_rms": 0.9672161208855091, "iterations": 3, "elapsed_seconds": 0.523, "settings": {"frequency_hz": 30000, "coil_separations_m": [0.32, 0.71, 1.18], "height_m": 0.25, "dipole_orientations": ["z", "x"], "data_order": ["z, 0.32 m, real", "z, 0.32 m, imag", "z, 0.71 m, real", "z, 0.71 m, imag", "z, 1.18 m, real", "z, 1.18 m, imag", "x, 0.32 m, real", "x, 0.32 m, imag", "x, 0.71 m, real", "x, 0.71 m, imag", "x, 1.18 m, real", "x, 1.18 m, imag"]}, "limitation": "Synthetic illustrative geometry, fixed layer boundaries; not a calibrated instrument or real survey inversion."}

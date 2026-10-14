@@ -1,0 +1,143 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  title: SimPEG User Tutorials
+  subject: SimPEG User Tutorials
+  description: SimPEG user tutorials
+  license:
+    content: CC-BY-4.0
+    code: MIT
+  github: https://github.com/simpeg/user-tutorials
+  keywords:
+    - geophysics
+    - inversions
+    - python
+    - open-source
+  authors:
+      - name: Devin Cowan
+        id: devincowan
+        affiliations: ubc
+        orcid: 0000-0002-0089-402X
+        roles:
+          - writing
+          - editing
+          - Software
+      - name: Lindsey Heagy
+        id: lindseyheagy
+        affiliations: ubc
+        orcid: 0000-0002-1551-5926
+        roles:
+          - Supervision
+          - Administration
+          - Software
+      - name: Santiago Soler
+        id: santisoler
+        affiliations: ubc
+        orcid: 0000-0001-9202-5317
+        roles:
+          - editing
+          - Software
+      - name: Thibaut Astic
+        id: thibautastic
+        affiliations: kobold
+        roles:
+          - writing
+  affiliations:
+    - id: ubc
+      institution: University of British Columbia
+      ror: https://ror.org/03rmrcq20
+      isni: 0000 0001 2288 9830
+      department: Department of Earth, Ocean and Atmospheric Sciences
+      address: 2020 – 2207 Main Mall
+      city: Vancouver
+      region: British Columbia
+      country: Canada
+      postal_code: V6T 1Z4
+      phone: 604 822 2449
+    - id: kobold
+      institution: Kobold Metals
+  # bibliography: []
+  references:
+    python: https://docs.python.org/3/
+    numpy: https://numpy.org/doc/stable/
+    scipy: https://docs.scipy.org/doc/scipy/
+    matplotlib: https://matplotlib.org/stable/
+    discretize: https://discretize.simpeg.xyz/en/main/
+    simpeg: https://docs.simpeg.xyz/latest/
+    geoana: https://geoana.simpeg.xyz/
+    sphinx: https://www.sphinx-doc.org/en/master/
+  exclude:
+    - README.md
+    - LICENSE
+    - LICENSE-CC-BY
+    - environment.yml
+
+  toc:
+    - file: index.md
+    - file: notebooks/gravity_index.md
+      children:
+      - file: notebooks/03-gravity/fwd_gravity_anomaly_3d.ipynb
+      - file: notebooks/03-gravity/fwd_gravity_gradiometry_3d.ipynb
+      - file: notebooks/03-gravity/inv_gravity_anomaly_3d.ipynb
+      - file: notebooks/03-gravity/weighting_strategies.ipynb
+    - file: notebooks/magnetics_index.md
+      children:
+      - file: notebooks/04-magnetics/fwd_magnetics_induced_3d.ipynb
+      - file: notebooks/04-magnetics/fwd_magnetics_mvi_3d.ipynb
+      - file: notebooks/04-magnetics/inv_magnetics_induced_3d.ipynb
+    - file: notebooks/dcr_index.md
+      children:
+      - file: notebooks/05-dcr/fwd_dcr_1d.ipynb
+      - file: notebooks/05-dcr/fwd_dcr_2d.ipynb
+      - file: notebooks/05-dcr/fwd_dcr_3d.ipynb
+      - file: notebooks/05-dcr/inv_dcr_1d.ipynb
+      - file: notebooks/05-dcr/inv_dcr_2d.ipynb
+      - file: notebooks/05-dcr/inv_dcr_3d.ipynb
+    - file: notebooks/ip_index.md
+      children:
+      - file: notebooks/06-ip/fwd_ip_2d.ipynb
+      - file: notebooks/06-ip/fwd_ip_3d.ipynb
+      - file: notebooks/06-ip/inv_ip_2d.ipynb
+      - file: notebooks/06-ip/inv_ip_3d.ipynb
+    - file: notebooks/fdem_index.md
+      children:
+      - file: notebooks/07-fdem/fwd_fdem_1d.ipynb
+      - file: notebooks/07-fdem/inv_fdem_1d.ipynb
+    - file: notebooks/tdem_index.md
+      children:
+      - file: notebooks/08-tdem/fwd_tdem_1d.ipynb
+      - file: notebooks/08-tdem/fwd_tdem_fundamentals.ipynb
+      - file: notebooks/08-tdem/fwd_utem_3d.ipynb
+      - file: notebooks/08-tdem/inv_tdem_1d.ipynb
+    - title: Joint Inversion
+      children:
+        - file: notebooks/11-joint-inversion/plot_inv_3_cross_gradient_pf.ipynb
+    - title: PGI Inversion
+      children:
+        - file: notebooks/12-pgi-inversion/plot_inv_1_joint_pf_pgi_full_info_tutorial.ipynb
+        - file: notebooks/12-pgi-inversion/plot_inv_2_joint_pf_pgi_no_info_tutorial.ipynb
+    - file: notebooks/contributing_index.md
+      children:
+        - file: notebooks/contributing/build_website.md
+        - file: notebooks/contributing/formatting.md
+        - file: notebooks/contributing/pull_request.md
+
+site:
+  template: book-theme
+  title: SimPEG User Tutorials
+  thumbnail: https://raw.github.com/simpeg/simpeg/main/docs/images/simpeg-logo.png
+  nav:
+    - title: SimPEG
+      children:
+        - title: Project website
+          url: https://simpeg.xyz
+        - title: Documentation
+          url: https://docs.simpeg.xyz
+  actions:
+    - title: Learn More
+      url: https://mystmd.org/guide
+  domains: []
+  options:
+    analytics_plausible: simpeg.xyz
+    logo: images/simpeg-logo.png
+    logo_text: User Tutorials

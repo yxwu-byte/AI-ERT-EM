@@ -1,0 +1,4 @@
+node: 5f2d643c484ebe8b8ccfa029aa7377d133f2f53f
+node-date: 2026-03-16T18:01:16Z
+describe-name: v0.25.2
+ref-names: grafted, HEAD, tag: v0.25.2

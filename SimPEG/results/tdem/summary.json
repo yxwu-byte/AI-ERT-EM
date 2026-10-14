@@ -1,0 +1,47 @@
+{
+  "method": "tdem",
+  "simpeg_version": "0.25.2",
+  "source_notebook": "user-tutorials/notebooks/08-tdem/inv_tdem_1d.ipynb",
+  "random_seed": 42,
+  "status": "passed",
+  "elapsed_seconds": 18.76,
+  "inversions": [
+    {
+      "inversion": 1,
+      "n_data": 31,
+      "n_parameters": 36,
+      "initial_weighted_rms": 12.085604930434364,
+      "final_weighted_rms": 0.9376753396068807,
+      "iterations": 13,
+      "elapsed_seconds": 2.117,
+      "finite_positive_model": true,
+      "fit_improved": true,
+      "near_noise_level": true
+    },
+    {
+      "inversion": 2,
+      "n_data": 31,
+      "n_parameters": 36,
+      "initial_weighted_rms": 12.085604930434364,
+      "final_weighted_rms": 0.9665328900176198,
+      "iterations": 85,
+      "elapsed_seconds": 12.826,
+      "finite_positive_model": true,
+      "fit_improved": true,
+      "near_noise_level": true
+    },
+    {
+      "inversion": 3,
+      "n_data": 31,
+      "n_parameters": 5,
+      "initial_weighted_rms": 14.54712181911758,
+      "final_weighted_rms": 0.9422069099999703,
+      "iterations": 34,
+      "elapsed_seconds": 2.3,
+      "finite_positive_model": true,
+      "fit_improved": true,
+      "near_noise_level": true
+    }
+  ],
+  "figures_saved": 7
+}

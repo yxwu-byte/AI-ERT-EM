@@ -1,0 +1,43 @@
+{
+  "method": "fdem",
+  "status": "passed",
+  "n_data": 12,
+  "n_parameters": 3,
+  "random_seed": 42,
+  "fixed_layer_thicknesses_m": [
+    0.4,
+    1.2
+  ],
+  "initial_weighted_rms": 4.538773727293685,
+  "final_weighted_rms": 0.9672161208855091,
+  "iterations": 3,
+  "elapsed_seconds": 0.523,
+  "settings": {
+    "frequency_hz": 30000,
+    "coil_separations_m": [
+      0.32,
+      0.71,
+      1.18
+    ],
+    "height_m": 0.25,
+    "dipole_orientations": [
+      "z",
+      "x"
+    ],
+    "data_order": [
+      "z, 0.32 m, real",
+      "z, 0.32 m, imag",
+      "z, 0.71 m, real",
+      "z, 0.71 m, imag",
+      "z, 1.18 m, real",
+      "z, 1.18 m, imag",
+      "x, 0.32 m, real",
+      "x, 0.32 m, imag",
+      "x, 0.71 m, real",
+      "x, 0.71 m, imag",
+      "x, 1.18 m, real",
+      "x, 1.18 m, imag"
+    ]
+  },
+  "limitation": "Synthetic illustrative geometry, fixed layer boundaries; not a calibrated instrument or real survey inversion."
+}

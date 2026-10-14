@@ -1,0 +1,47 @@
+{
+  "method": "fdem",
+  "simpeg_version": "0.25.2",
+  "source_notebook": "user-tutorials/notebooks/07-fdem/inv_fdem_1d.ipynb",
+  "random_seed": 42,
+  "status": "passed",
+  "elapsed_seconds": 7.876,
+  "inversions": [
+    {
+      "inversion": 1,
+      "n_data": 10,
+      "n_parameters": 40,
+      "initial_weighted_rms": 5.345951979110393,
+      "final_weighted_rms": 0.8514712097222157,
+      "iterations": 10,
+      "elapsed_seconds": 1.279,
+      "finite_positive_model": true,
+      "fit_improved": true,
+      "near_noise_level": true
+    },
+    {
+      "inversion": 2,
+      "n_data": 10,
+      "n_parameters": 40,
+      "initial_weighted_rms": 5.345951979110393,
+      "final_weighted_rms": 1.0029319703926982,
+      "iterations": 12,
+      "elapsed_seconds": 1.769,
+      "finite_positive_model": true,
+      "fit_improved": true,
+      "near_noise_level": true
+    },
+    {
+      "inversion": 3,
+      "n_data": 10,
+      "n_parameters": 5,
+      "initial_weighted_rms": 5.356634088632329,
+      "final_weighted_rms": 0.9687993299225134,
+      "iterations": 16,
+      "elapsed_seconds": 2.365,
+      "finite_positive_model": true,
+      "fit_improved": true,
+      "near_noise_level": true
+    }
+  ],
+  "figures_saved": 7
+}

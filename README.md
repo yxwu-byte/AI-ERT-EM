@@ -53,3 +53,9 @@ See [installation instructions](pygimli-source/INSTALLATION.md) and
 The imported Git tree was verified to match the upstream Git tree exactly,
 including all file contents and modes. Upstream Git attributes control
 checkout line endings. Downloading the source does not install or compile pyGIMLi.
+
+## SimPEG ERT and EM inversions
+
+The [SimPEG/](SimPEG/) subfolder contains SimPEG 0.25.2 source, official tutorial data, reproducible setup scripts, and saved results from ten synthetic ERT, time-domain EM, and frequency-domain EM inversions. Eight upstream EM sensitivity tests passed.
+
+Start with the [SimPEG setup instructions](SimPEG/README.md) and [inversion test report with figures](SimPEG/REPORT.md). SimPEG uses its own virtual environment inside that subfolder.

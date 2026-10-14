@@ -1,0 +1,19 @@
+name: simpeg-user-tutorials
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13.*
+  # Myst requirements
+  - nodejs>18
+  - mystmd
+  # Notebook requirements
+  - jupyter
+  - jupyterlab-myst
+  - nbconvert
+  - simpeg==0.25.*
+  - discretize==0.12.*
+  - choclo==0.3.*
+  - scikit-learn==1.7.*
+  - pymatsolver
+  # Code style
+  - ruff

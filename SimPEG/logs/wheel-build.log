@@ -1,0 +1,17 @@
+WARNING: The directory '/home/agent/.cache/pip' or its parent directory is not owned or is not writable by the current user. The cache has been disabled. Check the permissions and owner of that directory. If executing pip with sudo, you should use sudo's -H flag.
+Processing ./source
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: simpeg
+  Building wheel for simpeg (pyproject.toml): started
+  Building wheel for simpeg (pyproject.toml): finished with status 'done'
+  Created wheel for simpeg: filename=simpeg-0.25.2-py3-none-any.whl size=595286 sha256=58b170008f4be21f12a767bdaae0b795d703a052c096c9047563c2fb05529e5d
+  Stored in directory: /tmp/pip-ephem-wheel-cache-2phfh60p/wheels/ff/74/37/24d02f6ebe347c0380866a0f4f3197b4b4f910b29839bf22a2
+Successfully built simpeg
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.1
+[notice] To update, run: python -m pip install --upgrade pip

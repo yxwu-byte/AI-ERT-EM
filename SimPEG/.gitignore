@@ -1,0 +1,9 @@
+.venv/
+.cache/
+__pycache__/
+*.pyc
+simpeg-tested-examples.tar.gz
+
+# Keep the verified example outputs despite the repository-level results ignore.
+!results/
+!results/**

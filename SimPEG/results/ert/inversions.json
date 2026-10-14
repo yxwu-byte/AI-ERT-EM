@@ -1,0 +1,26 @@
+[
+  {
+    "inversion": 1,
+    "n_data": 135,
+    "n_parameters": 7205,
+    "initial_weighted_rms": 18.098792896953384,
+    "final_weighted_rms": 0.9874399643468664,
+    "iterations": 5,
+    "elapsed_seconds": 25.766,
+    "finite_positive_model": true,
+    "fit_improved": true,
+    "near_noise_level": true
+  },
+  {
+    "inversion": 2,
+    "n_data": 135,
+    "n_parameters": 7205,
+    "initial_weighted_rms": 18.226786746756158,
+    "final_weighted_rms": 1.008857804211014,
+    "iterations": 50,
+    "elapsed_seconds": 173.948,
+    "finite_positive_model": true,
+    "fit_improved": true,
+    "near_noise_level": true
+  }
+]

@@ -1,0 +1,125 @@
+Collecting contourpy==1.4.0 (from -r requirements-dependencies.txt (line 1))
+  Downloading contourpy-1.4.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+Collecting cycler==0.12.1 (from -r requirements-dependencies.txt (line 2))
+  Downloading cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting discretize==0.12.0 (from -r requirements-dependencies.txt (line 3))
+  Downloading discretize-0.12.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (8.0 kB)
+Collecting fonttools==4.66.1 (from -r requirements-dependencies.txt (line 4))
+  Downloading fonttools-4.66.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (130 kB)
+Collecting geoana==0.8.1 (from -r requirements-dependencies.txt (line 5))
+  Downloading geoana-0.8.1-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (6.2 kB)
+Collecting iniconfig==2.3.1 (from -r requirements-dependencies.txt (line 6))
+  Downloading iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+Collecting kiwisolver==1.5.1 (from -r requirements-dependencies.txt (line 7))
+  Downloading kiwisolver-1.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.2 kB)
+Collecting libdlf==0.3.0 (from -r requirements-dependencies.txt (line 8))
+  Downloading libdlf-0.3.0-py3-none-any.whl.metadata (430 bytes)
+Collecting matplotlib==3.11.2 (from -r requirements-dependencies.txt (line 9))
+  Downloading matplotlib-3.11.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (80 kB)
+Collecting numpy==2.5.4 (from -r requirements-dependencies.txt (line 10))
+  Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+Collecting packaging==26.3 (from -r requirements-dependencies.txt (line 11))
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pillow==12.3.0 (from -r requirements-dependencies.txt (line 12))
+  Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Collecting pluggy==1.6.0 (from -r requirements-dependencies.txt (line 13))
+  Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting Pygments==2.21.0 (from -r requirements-dependencies.txt (line 14))
+  Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting pymatsolver==0.4.0 (from -r requirements-dependencies.txt (line 15))
+  Downloading pymatsolver-0.4.0.tar.gz (14 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting pyparsing==3.3.3 (from -r requirements-dependencies.txt (line 16))
+  Downloading pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+Collecting pytest==9.1.1 (from -r requirements-dependencies.txt (line 17))
+  Downloading pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting python-dateutil==2.9.0.post0 (from -r requirements-dependencies.txt (line 18))
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting scipy==1.18.1 (from -r requirements-dependencies.txt (line 19))
+  Downloading scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting six==1.17.0 (from -r requirements-dependencies.txt (line 20))
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting typing_extensions==4.16.0 (from -r requirements-dependencies.txt (line 21))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Downloading contourpy-1.4.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (383 kB)
+Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Downloading discretize-0.12.0-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 4.1 MB/s eta 0:00:00
+Downloading fonttools-4.66.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.4/5.4 MB 2.8 MB/s eta 0:00:00
+Downloading geoana-0.8.1-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (211 kB)
+Downloading iniconfig-2.3.1-py3-none-any.whl (7.6 kB)
+Downloading kiwisolver-1.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 3.0 MB/s eta 0:00:00
+Downloading libdlf-0.3.0-py3-none-any.whl (172 kB)
+Downloading matplotlib-3.11.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (9.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.9/9.9 MB 2.6 MB/s eta 0:00:00
+Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 3.2 MB/s eta 0:00:00
+Using cached packaging-26.3-py3-none-any.whl (129 kB)
+Downloading pillow-12.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 2.8 MB/s eta 0:00:00
+Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 4.0 MB/s eta 0:00:00
+Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+Downloading pytest-9.1.1-py3-none-any.whl (386 kB)
+Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Downloading scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.3/35.3 MB 3.6 MB/s eta 0:00:00
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Building wheels for collected packages: pymatsolver
+  Building wheel for pymatsolver (pyproject.toml): started
+  Building wheel for pymatsolver (pyproject.toml): finished with status 'done'
+  Created wheel for pymatsolver: filename=pymatsolver-0.4.0-py3-none-any.whl size=15857 sha256=0f6846804e10dd68a84f34fe51d495e6b2e978cb30d1de799e3c35c6fa0890fe
+  Stored in directory: /workspace/AI-ERT-EM-publish/SimPEG/.cache/pip/wheels/2a/55/76/87920c3f8e189df6c75ba9c58fa9ac54af7e45c34e04e17e8c
+Successfully built pymatsolver
+Installing collected packages: typing_extensions, six, pyparsing, Pygments, pluggy, pillow, packaging, numpy, kiwisolver, iniconfig, fonttools, cycler, scipy, python-dateutil, pytest, libdlf, contourpy, pymatsolver, matplotlib, geoana, discretize
+Successfully installed Pygments-2.21.0 contourpy-1.4.0 cycler-0.12.1 discretize-0.12.0 fonttools-4.66.1 geoana-0.8.1 iniconfig-2.3.1 kiwisolver-1.5.1 libdlf-0.3.0 matplotlib-3.11.2 numpy-2.5.4 packaging-26.3 pillow-12.3.0 pluggy-1.6.0 pymatsolver-0.4.0 pyparsing-3.3.3 pytest-9.1.1 python-dateutil-2.9.0.post0 scipy-1.18.1 six-1.17.0 typing_extensions-4.16.0
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.1
+[notice] To update, run: python -m pip install --upgrade pip
+Obtaining file:///workspace/AI-ERT-EM-publish/SimPEG/source
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: numpy>=1.22 in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (2.5.4)
+Requirement already satisfied: scipy>=1.12 in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (1.18.1)
+Requirement already satisfied: pymatsolver>=0.3 in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (0.4.0)
+Requirement already satisfied: matplotlib in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (3.11.2)
+Requirement already satisfied: discretize>=0.12 in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (0.12.0)
+Requirement already satisfied: geoana>=0.8.1 in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (0.8.1)
+Requirement already satisfied: libdlf in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (0.3.0)
+Requirement already satisfied: typing_extensions in ./.venv/lib/python3.12/site-packages (from simpeg==0.25.2) (4.16.0)
+Requirement already satisfied: packaging in ./.venv/lib/python3.12/site-packages (from pymatsolver>=0.3->simpeg==0.25.2) (26.3)
+Requirement already satisfied: contourpy>=1.0.1 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (1.4.0)
+Requirement already satisfied: cycler>=0.10 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (0.12.1)
+Requirement already satisfied: fonttools>=4.28.2 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (4.66.1)
+Requirement already satisfied: kiwisolver>=1.3.1 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (1.5.1)
+Requirement already satisfied: pillow>=9 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (12.3.0)
+Requirement already satisfied: pyparsing>=3 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (3.3.3)
+Requirement already satisfied: python-dateutil>=2.7 in ./.venv/lib/python3.12/site-packages (from matplotlib->simpeg==0.25.2) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in ./.venv/lib/python3.12/site-packages (from python-dateutil>=2.7->matplotlib->simpeg==0.25.2) (1.17.0)
+Building wheels for collected packages: simpeg
+  Building editable for simpeg (pyproject.toml): started
+  Building editable for simpeg (pyproject.toml): finished with status 'done'
+  Created wheel for simpeg: filename=simpeg-0.25.2-0.editable-py3-none-any.whl size=8216 sha256=13a1dc1baff88bcebbfd5621f368ed056dbf9f3793b3f1d0acc66f40754ac25e
+  Stored in directory: /tmp/pip-ephem-wheel-cache-oqbf1xzk/wheels/b5/ec/81/11d79e4dc4e891aabedc9191588622c8e38fd640e64781f8db
+Successfully built simpeg
+Installing collected packages: simpeg
+Successfully installed simpeg-0.25.2
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.1
+[notice] To update, run: python -m pip install --upgrade pip
+No broken requirements found.

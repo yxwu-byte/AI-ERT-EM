@@ -1,0 +1,21 @@
+{
+  "report_timestamp": "2026-10-12T23:06:13.066295-07:00",
+  "timezone": "America/Los_Angeles",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "simpeg_tag": "v0.25.2",
+  "simpeg_commit": "5f2d643c484ebe8b8ccfa029aa7377d133f2f53f",
+  "tutorial_commit": "d817cbf587605940d9125d4308a05c88610335e9",
+  "random_seed": 42,
+  "wheel": "dist/simpeg-0.25.2-py3-none-any.whl",
+  "wheel_sha256": "58b170008f4be21f12a767bdaae0b795d703a052c096c9047563c2fb05529e5d",
+  "packages": {
+    "simpeg": "0.25.2",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "discretize": "0.12.0",
+    "geoana": "0.8.1",
+    "pymatsolver": "0.4.0",
+    "matplotlib": "3.11.2"
+  }
+}
