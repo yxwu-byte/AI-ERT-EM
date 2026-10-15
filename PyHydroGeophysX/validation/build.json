@@ -1,0 +1,13 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux",
+  "pyhydrogeophysx_version": "0.3.0",
+  "pygimli_version": "1.6.1",
+  "wheel": "pyhydrogeophysx-0.3.0-py3-none-any.whl",
+  "wheel_bytes": 645795,
+  "wheel_sha256": "b6a2a8c1cfc9f4da0a6226711cae83db368d1e94a5f19c562b3081b045a18424",
+  "byte_compilation": "passed",
+  "pip_check": "No broken requirements found.",
+  "wheel_install_and_import": "passed",
+  "source_blob_verification": "579 files matched upstream Git blobs"
+}

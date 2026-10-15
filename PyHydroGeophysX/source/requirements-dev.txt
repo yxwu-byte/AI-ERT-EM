@@ -1,0 +1,16 @@
+# Development dependencies
+pytest>=7.0
+pytest-cov
+black
+flake8
+twine
+build
+wheel
+setuptools>=45
+
+# Documentation
+sphinx>=5.0
+sphinx_rtd_theme
+sphinx-gallery
+myst-parser>=2.0.0
+nbsphinx>=0.9.1
