@@ -1,0 +1,33 @@
+{
+  "pyhydrogeophysx_version": "0.3.0",
+  "pygimli_version": "1.6.1",
+  "source": "source/PyHydroGeophysX",
+  "survey": "synthetic Wenner, no added noise",
+  "n_data": 18,
+  "n_parameters": 173,
+  "initial_chi2": 491.0381324188225,
+  "final_chi2": 0.033138896892560325,
+  "chi2_definition": "mean(((log(predicted)-log(observed))/log1p(relative_error))**2)",
+  "relative_rms_percent": 0.4049307624087432,
+  "chi2_history": [
+    491.03813241881954,
+    2.8432057432953464,
+    0.03313889689256035
+  ],
+  "settings": {
+    "lambda_val": 20,
+    "max_iterations": 8,
+    "method": "cgls",
+    "model_constraints": [
+      1.0,
+      100000.0
+    ],
+    "lambda_rate": 1.0,
+    "min_relative_error": 0.005,
+    "max_relative_error": 0.03,
+    "use_gpu": false,
+    "parallel": false,
+    "n_jobs": 1
+  },
+  "checks": "local source import, finite output, model bounds, nonzero Jacobian, preserved errors, improved fit"
+}

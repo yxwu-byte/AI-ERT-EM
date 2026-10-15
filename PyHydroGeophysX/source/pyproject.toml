@@ -1,0 +1,132 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyHydroGeophysX"
+version = "0.3.0"
+description = "A comprehensive Python package for integrating hydrological model outputs with geophysical forward modeling and inversion, featuring an automatic cross-modal geophysics agent for subsurface hydrology"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "Hang Chen", email = "hangchen.work@gmail.com"},
+]
+keywords = [
+    "geophysics", 
+    "hydrology", 
+    "ERT", 
+    "seismic", 
+    "tomography", 
+    "inversion", 
+    "MODFLOW", 
+    "ParFlow",
+    "watershed monitoring"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Hydrology",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "numpy>=1.21,<3.0",
+    "scipy>=1.8,<3.0",
+    "matplotlib>=3.5,<4.0",
+    "pandas>=1.3.0",
+    "joblib>=1.2",
+    "tqdm>=4.62",
+]
+
+[project.optional-dependencies]
+geophysics = [
+    "pygimli>=1.5.5,<2.0",
+    "simpeg>=0.24,<1.0",
+    "pymatsolver>=0.2",
+    "flopy>=3.5,<4.0",
+    "pftools>=1.3",
+]
+gpu = [
+    "cupy-cuda11x",
+]
+agents = [
+    "openai",
+    "google-generativeai",
+    "anthropic",
+]
+climate = [
+    "pydaymet>=0.16.0",
+    "pandas>=1.3.0",
+    "xarray>=0.19.0",
+]
+webapp = [
+    "streamlit>=1.35,<2.0",
+    "plotly>=5.18,<7.0",
+    "streamlit-plotly-events>=0.0.6",
+    "pyarrow>=14.0",
+]
+desktop = [
+    "PySide6>=6.5",
+    "pyqtgraph>=0.13",
+    "qtawesome>=1.2",
+    "numpy>=1.21,<3.0",
+    "pandas>=1.3.0",
+]
+seismic-raw = [
+    "obspy>=1.4.0",
+]
+docs = [
+    "sphinx>=5.0",
+    "sphinx-gallery",
+    "sphinx_rtd_theme",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "flake8",
+]
+all = [
+    "pygimli>=1.5.5,<2.0",
+    "simpeg>=0.24,<1.0",
+    "pymatsolver>=0.2",
+    "flopy>=3.5,<4.0",
+    "pftools>=1.3",
+    "cupy-cuda11x",
+    "openai", "google-generativeai", "anthropic",
+    "pydaymet>=0.16.0", "pandas>=1.3.0", "xarray>=0.19.0",
+    "streamlit>=1.35,<2.0", "plotly>=5.18,<7.0", "streamlit-plotly-events>=0.0.6", "pyarrow>=14.0",
+    "obspy>=1.4.0",
+    "PySide6>=6.5", "pyqtgraph>=0.13",
+    "sphinx>=5.0", "sphinx-gallery", "sphinx_rtd_theme",
+    "pytest>=7.0", "pytest-cov", "black", "flake8",
+]
+
+[project.scripts]
+pyhydrogeophysx-gui = "PyHydroGeophysX.gui:main"
+
+[project.gui-scripts]
+pyhydrogeophysx-workbench = "PyHydroGeophysX.qt_apps.launcher:main"
+
+[project.urls]
+"Homepage" = "https://github.com/geohang/PyHydroGeophysX"
+"Documentation" = "https://geohang.github.io/PyHydroGeophysX/"
+"Repository" = "https://github.com/geohang/PyHydroGeophysX"
+"Bug Tracker" = "https://github.com/geohang/PyHydroGeophysX/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["PyHydroGeophysX*"]
+
+[tool.setuptools.package-data]
+# The examples/ tree lives at the repository root, not inside the package, so a
+# package-data entry cannot ship it; install from a checkout for the examples.
+PyHydroGeophysX = ["data/*", "*.md", "qt_apps/modules/*.md"]

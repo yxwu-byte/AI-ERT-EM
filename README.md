@@ -59,3 +59,15 @@ checkout line endings. Downloading the source does not install or compile pyGIML
 The [SimPEG/](SimPEG/) subfolder contains SimPEG 0.25.2 source, official tutorial data, reproducible setup scripts, and saved results from ten synthetic ERT, time-domain EM, and frequency-domain EM inversions. Eight upstream EM sensitivity tests passed.
 
 Start with the [SimPEG setup instructions](SimPEG/README.md) and [inversion test report with figures](SimPEG/REPORT.md). SimPEG uses its own virtual environment inside that subfolder.
+
+## PyHydroGeophysX source and ERT inversion
+
+The [PyHydroGeophysX/](PyHydroGeophysX/) folder contains Hang Chen's v0.3.0
+source snapshot, its Apache 2.0 license, setup instructions, and a synthetic
+ERT inversion example. Its setup installs the bundled source into a separate
+virtual environment and builds a Python wheel. Start with the
+[workspace instructions](PyHydroGeophysX/README.md).
+
+The separate ERT-data automatic processing repository installs the published
+PyHydroGeophysX 0.3.0 package from PyPI. This source copy is available for local
+development; adding it here does not change that pipeline's dependency source.

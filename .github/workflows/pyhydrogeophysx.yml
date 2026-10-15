@@ -1,0 +1,35 @@
+name: PyHydroGeophysX source and ERT check
+on:
+  push:
+    branches: [main]
+    paths: ['PyHydroGeophysX/**', '.github/workflows/pyhydrogeophysx.yml']
+  pull_request:
+    paths: ['PyHydroGeophysX/**', '.github/workflows/pyhydrogeophysx.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: PyHydroGeophysX
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: PyHydroGeophysX/requirements-dependencies.txt
+      - name: Install bundled source, compile modules, and build wheel
+        run: bash setup.sh
+      - name: Verify synthetic ERT inversion and exports
+        run: .venv/bin/python run_ert_example.py
+      - name: Preserve ERT output and built wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyhydrogeophysx-ert-and-wheel
+          path: |
+            PyHydroGeophysX/results/ert/
+            PyHydroGeophysX/dist/*.whl
