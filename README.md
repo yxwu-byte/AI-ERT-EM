@@ -79,3 +79,8 @@ development; adding it here does not change that pipeline's dependency source.
 results export and an offline command-based navigation sidebar. A Windows CI build
 produces a bundled executable, portable ZIP and per-user installer, with packaged
 GUI and inversion checks. See the desktop documentation for build status and downloads.
+
+Version 0.3 adds four synthetic sample surveys, a column/unit mapping and format
+conversion workflow, and optional SimPEG / PyHydroGeophysX solver packs hosted
+by GitHub Actions. Users can select one or several local engines and compare
+common apparent-resistivity fit metrics without bundling all engines in the base app.

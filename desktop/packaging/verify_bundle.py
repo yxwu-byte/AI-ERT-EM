@@ -30,8 +30,9 @@ invoke(['--diagnostics', output / 'diagnostics.json'])
 diagnostics = json.loads((output / 'diagnostics.json').read_text())
 assert diagnostics['frozen'], 'Verification must use the packaged executable'
 invoke(['--smoke-test'])
+invoke(['--conversion-test', output / 'conversion checks'])
 invoke(['--workflow-test', output / 'guided workflow'])
-guided_runs = list((output / 'guided workflow').glob('ert-run-*/run.json'))
+guided_runs = list((output / 'guided workflow').glob('ert-run-*/pygimli/run.json'))
 assert guided_runs, 'GUI worker did not finish'
 guided = json.loads(guided_runs[0].read_text())
 assert guided['settings']['error_floor'] == 0.05
@@ -70,3 +71,13 @@ result = subprocess.run([str(exe), '--worker', str(bad)], cwd=output, env=env, t
 assert result.returncode != 0 and not (bad / 'run.json').exists()
 assert 'ValueError' in (bad / 'solver.log').read_text(encoding='utf-8')
 print(f'Packaged GUI, both inversions, exports and invalid-input handling passed: {output}')
+
+if len(sys.argv) > 3 and sys.argv[3] == '--with-engines':
+    invoke(['--multi-test', output / 'multiple engines'])
+    batches = list((output / 'multiple engines').glob('ert-run-*/batch.json'))
+    assert len(batches) == 1
+    batch = json.loads(batches[0].read_text())
+    assert set(batch) == {'pygimli','simpeg','hydro'}
+    assert all(item['status'] == 'completed' for item in batch.values())
+    assert all(math.isfinite(item['common_log_chi_squared']) and item['relative_rms_percent'] < 8 for item in batch.values())
+    assert (batches[0].parent / 'comparison.csv').is_file()

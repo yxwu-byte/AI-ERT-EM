@@ -9,7 +9,61 @@ on:
 permissions:
   contents: read
 jobs:
+  engines:
+    name: Optional ${{ matrix.engine }} engine
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [simpeg, hydro]
+    env:
+      ERT_ENGINE: ${{ matrix.engine }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Install only this engine's dependencies
+        run: |
+          python -m pip install -r desktop/packaging/requirements-${{ matrix.engine }}.txt -r desktop/packaging/requirements-build.txt
+      - name: Install pinned bundled PyHydroGeophysX source
+        if: matrix.engine == 'hydro'
+        run: python -m pip install --no-deps ./PyHydroGeophysX/source
+      - name: Freeze optional worker
+        run: |
+          python -m pip check
+          python -m PyInstaller --noconfirm --clean desktop/packaging/engine.spec
+      - name: Include source and dependency license notices
+        shell: pwsh
+        run: |
+          python desktop/packaging/collect_licenses.py dist/ERTEngine/third-party-licenses
+          Copy-Item desktop/packaging/THIRD_PARTY_NOTICES.txt dist/ERTEngine/
+          New-Item -ItemType Directory dist/ERTEngine/application-source
+          Copy-Item desktop/*.py dist/ERTEngine/application-source/
+          python -m pip freeze > dist/ERTEngine/resolved-requirements.txt
+      - name: Verify the standalone solver executable
+        run: python desktop/packaging/verify_engine.py ${{ matrix.engine }} dist/ERTEngine/ERTEngine.exe "${{ runner.temp }}/engine verification ü"
+      - name: Create integrity-checked engine pack
+        run: python desktop/packaging/make_engine_pack.py ${{ matrix.engine }} dist/ERTEngine dist/ERTEngine-${{ matrix.engine }}-0.3.0-Windows-x64.zip
+      - name: Upload optional engine pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: ERTEngine-${{ matrix.engine }}
+          path: dist/ERTEngine-*-Windows-x64.zip
+          retention-days: 30
+      - name: Preserve engine logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ERTEngine-${{ matrix.engine }}-verification
+          path: |
+            ${{ runner.temp }}/engine verification ü/
+            build/engine/warn-*.txt
+          if-no-files-found: ignore
   windows:
+    needs: engines
     runs-on: windows-2022
     timeout-minutes: 35
     steps:
@@ -40,8 +94,20 @@ jobs:
           Copy-Item desktop/*.py dist/ERTStudio/application-source/
           Copy-Item desktop/requirements.txt dist/ERTStudio/application-source/
           Copy-Item desktop/README.md dist/ERTStudio/application-source/
+      - name: Download optional packs built by the engine jobs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ERTEngine-*
+          path: optional-engines
+      - name: Install optional packs through the app's validated installer
+        shell: pwsh
+        run: |
+          Get-ChildItem optional-engines -Recurse -Filter '*-Windows-x64.zip' | ForEach-Object {
+            $process = Start-Process (Resolve-Path dist/ERTStudio/ERTStudio.exe) -ArgumentList '--install-pack', "`"$($_.FullName)`"" -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw 'Engine pack installation failed' }
+          }
       - name: Verify portable executable from a separate working directory
-        run: python desktop/packaging/verify_bundle.py dist/ERTStudio/ERTStudio.exe "${{ runner.temp }}/ERT portable checks"
+        run: python desktop/packaging/verify_bundle.py dist/ERTStudio/ERTStudio.exe "${{ runner.temp }}/ERT portable checks" --with-engines
       - name: Build per-user Windows installer
         shell: pwsh
         run: |
@@ -54,12 +120,12 @@ jobs:
           $installer = Get-ChildItem dist/installer/*Setup.exe | Select-Object -First 1
           $process = Start-Process $installer.FullName -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$target`"" -Wait -PassThru
           if ($process.ExitCode -ne 0) { throw "Install failed: $($process.ExitCode)" }
-          python desktop/packaging/verify_bundle.py "$target/ERTStudio.exe" "${{ runner.temp }}/ERT installed checks"
+          python desktop/packaging/verify_bundle.py "$target/ERTStudio.exe" "${{ runner.temp }}/ERT installed checks" --with-engines
           if ($LASTEXITCODE -ne 0) { throw "Installed executable verification failed" }
       - name: Create portable ZIP and checksums
         shell: pwsh
         run: |
-          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.2.0-Windows-x64-Portable.zip
+          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.3.0-Windows-x64-Portable.zip
           Get-FileHash dist/*Portable.zip, dist/installer/*Setup.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
       - name: Upload standalone Windows downloads
         uses: actions/upload-artifact@v4

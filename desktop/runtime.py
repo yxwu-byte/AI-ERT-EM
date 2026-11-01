@@ -10,9 +10,12 @@ def configure_runtime():
     os.environ.setdefault('MPLCONFIGDIR', str(base / 'matplotlib'))
     os.environ.setdefault('XDG_CONFIG_HOME', str(base / 'config'))
     os.environ.setdefault('XDG_CACHE_HOME', str(base / 'cache'))
-    os.environ.setdefault('BERT_NUM_THREADS', '1')
-    os.environ.setdefault('OMP_NUM_THREADS', '1')
-    os.environ.setdefault('OPENBLAS_NUM_THREADS', '1')
+    # Large inherited BLAS thread pools slow small ERT Jacobian products.
+    threads = os.environ.get('ERT_NUM_THREADS', '1')
+    if not threads.isdigit() or not 1 <= int(threads) <= 64:
+        threads = '1'
+    for name in ('BERT_NUM_THREADS', 'OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS'):
+        os.environ[name] = threads
     return base
 
 

@@ -3,7 +3,7 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_all, collect_data_files, copy_metadata, collect_delvewheel_libs_directory
 
 root = Path(SPECPATH).parent
-binaries, datas, hiddenimports = [], [], []
+binaries, datas, hiddenimports = [], [], ['backend_pygimli']
 for package in ('pygimli', 'pgcore'):
     package_datas, package_binaries, package_hidden = collect_all(package)
     datas += package_datas
@@ -20,7 +20,7 @@ datas += [(str(path), '.') for path in (root / 'packaging').glob('Qt-*.txt')]
 datas += collect_data_files('PySide6', includes=['**/*LICENSE*', '**/*license*'])
 a = Analysis([str(root / 'app.py')], pathex=[str(root)], binaries=binaries,
              datas=datas, hiddenimports=hiddenimports,
-             excludes=['PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets',
+             excludes=['simpeg', 'PyHydroGeophysX', 'PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets',
                        'PySide6.QtQml', 'PySide6.QtQuick', 'IPython', 'jupyterlab'],
              noarchive=False)
 pyz = PYZ(a.pure)

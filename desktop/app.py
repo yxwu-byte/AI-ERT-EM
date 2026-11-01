@@ -7,12 +7,25 @@ from runtime import configure_runtime, redirect_worker_log, resource_path
 
 
 def main():
-    from PySide6.QtCore import QProcess, QTimer, Qt, QUrl, QSize
+    from PySide6.QtCore import QProcess, QTimer, Qt, QUrl, QSize, QThread, Signal
     from PySide6.QtGui import QPixmap, QDesktopServices
     from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout,
         QVBoxLayout, QLabel, QPushButton, QToolButton, QGridLayout, QGroupBox, QCheckBox, QStyle, QStackedWidget, QFileDialog,
         QComboBox, QDoubleSpinBox, QSpinBox, QFormLayout, QTextEdit, QLineEdit,
-        QMessageBox, QScrollArea, QSizePolicy)
+        QMessageBox, QScrollArea, QSizePolicy, QTableWidget, QTableWidgetItem, QDialog, QInputDialog)
+
+    from engine_packs import ENGINES, engine_path, install_pack, PACK_PAGE
+    from survey_io import write_csv, read_bert, read_res2dinv_wenner
+
+    class PackInstaller(QThread):
+        done = Signal(str)
+        failed = Signal(str)
+        def __init__(self, path, parent):
+            super().__init__(parent)
+            self.path = path
+        def run(self):
+            try: self.done.emit(install_pack(self.path))
+            except Exception as exc: self.failed.emit(str(exc))
 
     class Window(QMainWindow):
         def __init__(self):
@@ -24,6 +37,10 @@ def main():
             self.rows = None
             self.output_path = None
             self.process = None
+            self.import_report = {}
+            self.active_output = None
+            self.batch_results = {}
+            self.result_paths = {}
             root = QWidget()
             self.setCentralWidget(root)
             layout = QHBoxLayout(root)
@@ -92,18 +109,38 @@ def main():
                 return box
 
             box = page('Import your survey', 'Prototype: flat-surface 2D surveys with finite electrodes. '
-                       'CSV columns: ax, bx, mx, nx (metres), rhoa (ohm m), error (relative fraction, e.g. 0.03). '
-                       'Topography and instrument-specific importers are planned.')
+                       'Import standard CSV, map delimited tables, or convert BERT and RES2DINV Wenner files. '
+                       'Every engine receives the same validated positions, apparent resistivity and errors.')
             self.source = QLabel('No survey selected')
             box.addWidget(self.source)
-            button = QPushButton('Choose survey CSV…')
+            button = QPushButton('Import or convert a survey…')
             button.clicked.connect(self.import_data)
             box.addWidget(button)
             self.inputs.append(button)
-            example = QPushButton('Try the included sample survey')
-            example.clicked.connect(lambda: self.load_survey(str(resource_path('examples/homogeneous.csv'))))
+            mapped = QPushButton('Map columns and units for any table…')
+            mapped.clicked.connect(self.map_table)
+            box.addWidget(mapped)
+            self.inputs.append(mapped)
+            self.sample_catalog = json.loads(resource_path('examples/catalog.json').read_text(encoding='utf-8'))
+            self.sample_choice = QComboBox()
+            for sample in self.sample_catalog:
+                self.sample_choice.addItem(sample['label'], sample)
+            box.addWidget(self.sample_choice)
+            self.sample_description = QLabel(self.sample_catalog[0]['description'] + ' All samples are synthetic.')
+            self.sample_description.setWordWrap(True)
+            box.addWidget(self.sample_description)
+            self.sample_choice.currentIndexChanged.connect(lambda _: self.sample_description.setText(self.sample_choice.currentData()['description'] + ' All samples are synthetic.'))
+            example = QPushButton('Load selected sample')
+            example.clicked.connect(lambda: self.load_survey(str(resource_path('examples/' + self.sample_choice.currentData()['file']))))
             box.addWidget(example)
-            self.inputs.append(example)
+            self.inputs.extend([example, self.sample_choice])
+            formats = QPushButton('Open sample files and conversion examples')
+            formats.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(resource_path('examples')))))
+            box.addWidget(formats)
+            export = QPushButton('Save converted standard CSV…')
+            export.clicked.connect(self.export_survey)
+            box.addWidget(export)
+            self.inputs.append(export)
             box.addStretch()
 
             box = page('Check data quality', 'Input checks reject missing, non-finite, non-positive resistivity, '
@@ -112,11 +149,36 @@ def main():
             self.quality = QLabel('Import a survey to see validation results.')
             self.quality.setWordWrap(True)
             box.addWidget(self.quality)
-            box.addStretch()
+            self.data_preview = QTableWidget(0, 6)
+            self.data_preview.setHorizontalHeaderLabels(['A x (m)','B x (m)','M x (m)','N x (m)','ρa (ohm m)','Relative error'])
+            self.data_preview.setEditTriggers(QTableWidget.NoEditTriggers)
+            box.addWidget(self.data_preview, 1)
 
-            box = page('Choose an inversion approach', 'Both presets use pyGIMLi. Smooth regularization favors '
-                       'gradual changes; blocky IRLS regularization favors sharper boundaries. '
-                       'Data errors and optional robust weighting are configured below.')
+            box = page('Choose engines and inversion parameters', 'Select one or several engines. Runs use the same converted survey, '
+                       'but mesh discretizations and objective functions differ. Compare the common fit metrics alongside the models. '
+                       'Optional engines are downloaded from GitHub once and then run locally; survey data are never uploaded.')
+            engines = QGroupBox('Inversion engines • select one or more')
+            engine_box = QVBoxLayout(engines)
+            self.engine_checks = {}
+            for key, name in ENGINES.items():
+                check = QCheckBox(name)
+                check.setChecked(key == 'pygimli')
+                self.engine_checks[key] = check
+                engine_box.addWidget(check)
+                self.inputs.append(check)
+            note = QLabel('pyGIMLi: smooth or blocky, with optional robust weighting. SimPEG: smooth L2 log-resistivity. '
+                          'PyHydroGeophysX: smooth ERT using pyGIMLi forward modelling and its own solver/stopping rules. '
+                          'λ values do not have identical numerical meaning across engines.')
+            note.setWordWrap(True);engine_box.addWidget(note)
+            get_packs = QPushButton('Get optional engine packs from GitHub')
+            get_packs.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(PACK_PAGE)))
+            engine_box.addWidget(get_packs)
+            self.install_pack_button = QPushButton('Install downloaded engine-pack ZIP…')
+            self.install_pack_button.clicked.connect(self.choose_engine_pack)
+            engine_box.addWidget(self.install_pack_button)
+            self.inputs.append(self.install_pack_button)
+            box.addWidget(engines)
+            self.refresh_engines()
             self.parameter_controls = {}
             self.bound_controls = []
 
@@ -151,20 +213,20 @@ def main():
                            'a smaller vertical weight permits more change with depth relative to horizontal changes.')
             self.preset = QComboBox()
             self.preset.addItems(PRESETS)
-            form.addRow('Model preset', self.preset)
+            form.addRow('pyGIMLi model preset', self.preset)
             self.inputs.append(self.preset)
             self.lam = number(form, 'regularization', 'Regularization strength λ', 0.01, 100000, 20,
                               'Higher values penalize model roughness more strongly.')
             self.start = number(form, 'start_resistivity', 'Starting resistivity (ohm m)', 0.01, 1000000, 100,
                                 'Uniform resistivity used to start the inversion.')
-            number(form, 'vertical_weight', 'Vertical smoothing weight', 0.01, 1, 1,
+            number(form, 'vertical_weight', 'Vertical smoothing (pyGIMLi)', 0.01, 1, 1,
                    'Ratio of vertical to horizontal roughness weighting.')
             number(form, 'lambda_factor', 'λ multiplier per iteration', 0.01, 1, 1,
                    '1 keeps λ constant; below 1 gradually relaxes regularization.')
 
             form = section('Data weighting', 'Keep supplied CSV errors or set a minimum uncertainty. Robust data '
                            'weighting reduces the influence of large residuals; it does not remove bad measurements.')
-            self.robust_data = QCheckBox('Use robust data weighting (IRLS)')
+            self.robust_data = QCheckBox('pyGIMLi: robust data weighting (IRLS)')
             form.addRow(self.robust_data)
             self.inputs.append(self.robust_data)
             number(form, 'error_floor', 'Minimum relative error (%)', 0, 99, 0,
@@ -197,12 +259,20 @@ def main():
             self.iterations.setValue(10)
             form.addRow('Maximum iterations', self.iterations)
             self.inputs.append(self.iterations)
-            number(form, 'min_phi_change', 'Minimum objective improvement (%)', 0, 100, 1,
+            number(form, 'min_phi_change', 'pyGIMLi minimum improvement (%)', 0, 100, 1,
                    'Stop when relative objective improvement falls below this percentage after the initial iterations.')
-            self.stop_at_chi_one = QCheckBox('Stop when χ² reaches 1 or less')
+            self.stop_at_chi_one = QCheckBox('pyGIMLi: stop when χ² reaches 1 or less')
             self.stop_at_chi_one.setChecked(True)
             form.addRow(self.stop_at_chi_one)
             self.inputs.append(self.stop_at_chi_one)
+            self.hydro_solver = QComboBox()
+            self.hydro_solver.addItems(['cgls', 'lsqr'])
+            self.hydro_solver.setToolTip('Linear update solver for PyHydroGeophysX only. Its upstream stopping rule is χ² < 1.5 or < 1% change.')
+            form.addRow('PyHydroGeophysX linear solver', self.hydro_solver)
+            self.inputs.append(self.hydro_solver)
+            scope = QLabel('The preset, robust data weighting, vertical smoothing and stopping checkboxes above apply only to pyGIMLi. '
+                           'SimPEG uses its native voltage-data target χ² = 1; PyHydroGeophysX uses its upstream fixed stopping rules.')
+            scope.setWordWrap(True);box.addWidget(scope)
             reset = QPushButton('Restore recommended defaults')
             reset.clicked.connect(self.reset_parameters)
             box.addWidget(reset)
@@ -210,7 +280,7 @@ def main():
             box.addStretch()
 
             box = page('Run inversion', 'Runs locally in a separate process. Choose a new results folder for '
-                       'each run. Cancelling keeps partial files, which are not completed results.')
+                       'each run. Selected engines run sequentially to limit memory usage. Cancelling stops the current and pending engines; completed results remain available.')
             self.run = QPushButton('Choose results folder and run…')
             self.run.clicked.connect(self.start_run)
             self.inputs.append(self.run)
@@ -224,10 +294,18 @@ def main():
             box.addWidget(self.log, 1)
 
             box = page('Review results', 'Resistivity is non-unique. Review misfit, coverage and geological '
-                       'context together. The results folder includes model meshes, coverage, responses and run settings.')
+                       'context together. Each engine saves its model, predicted data, settings and available diagnostics.')
             self.summary = QLabel('Complete an inversion to view results.')
             self.summary.setWordWrap(True)
             box.addWidget(self.summary)
+            self.result_choice = QComboBox()
+            self.result_choice.currentIndexChanged.connect(self.show_selected_result)
+            box.addWidget(self.result_choice)
+            self.comparison = QTableWidget(0, 4)
+            self.comparison.setHorizontalHeaderLabels(['Engine','Status','Common log χ²','Relative RMS (%)'])
+            self.comparison.setEditTriggers(QTableWidget.NoEditTriggers)
+            self.comparison.setMaximumHeight(145)
+            box.addWidget(self.comparison)
             open_results = QPushButton('Open results folder')
             open_results.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.output_path))) if self.output_path else None)
             box.addWidget(open_results)
@@ -287,6 +365,7 @@ def main():
             self.robust_data.setChecked(defaults.robust_data)
             self.stop_at_chi_one.setChecked(defaults.stop_at_chi_one)
             self.use_bounds.setChecked(False)
+            self.hydro_solver.setCurrentText(defaults.hydro_solver)
             self.refresh_bounds()
 
         def current_settings(self):
@@ -298,31 +377,123 @@ def main():
                 values['lower_resistivity'] = values['upper_resistivity'] = None
             settings = Settings(preset=self.preset.currentText(), max_iterations=self.iterations.value(),
                                 robust_data=self.robust_data.isChecked(),
-                                stop_at_chi_one=self.stop_at_chi_one.isChecked(), **values)
+                                stop_at_chi_one=self.stop_at_chi_one.isChecked(), hydro_solver=self.hydro_solver.currentText(), **values)
             settings.validate()
             return settings
 
+        def refresh_engines(self):
+            import os
+            developer = not getattr(sys, 'frozen', False) and bool(os.environ.get('ERT_ENGINE_TEST_PYTHON'))
+            for engine, check in self.engine_checks.items():
+                available = engine == 'pygimli' or engine_path(engine) is not None or developer
+                check.setEnabled(available)
+                check.setText(ENGINES[engine] + (' • included' if engine == 'pygimli' else ' • installed' if available else ' • download optional pack'))
+                if not available: check.setChecked(False)
+
+        def choose_engine_pack(self):
+            path, _ = QFileDialog.getOpenFileName(self, 'Choose an official engine-pack ZIP', '', 'Engine pack (*.zip)')
+            if not path: return
+            self.install_pack_button.setEnabled(False)
+            self.run.setEnabled(False)
+            self.statusBar().showMessage('Checking and installing engine pack…')
+            self.pack_installer = PackInstaller(path, self)
+            self.pack_installer.done.connect(self.pack_installed)
+            self.pack_installer.failed.connect(self.pack_failed)
+            self.pack_installer.start()
+
+        def pack_installed(self, engine):
+            self.refresh_engines()
+            self.engine_checks[engine].setChecked(True)
+            self.install_pack_button.setEnabled(True);self.run.setEnabled(True)
+            self.statusBar().showMessage(ENGINES[engine] + ' engine pack installed; ready for local inversion')
+
+        def pack_failed(self, error):
+            self.install_pack_button.setEnabled(True);self.run.setEnabled(True)
+            QMessageBox.warning(self, 'Engine pack could not be installed', error)
+            self.statusBar().showMessage('Engine installation failed')
+
+        def selected_engines(self):
+            selected = [engine for engine, check in self.engine_checks.items() if check.isChecked()]
+            if not selected: raise ValueError('Select at least one inversion engine.')
+            import os
+            developer = not getattr(sys, 'frozen', False) and bool(os.environ.get('ERT_ENGINE_TEST_PYTHON'))
+            for engine in selected:
+                if engine != 'pygimli' and engine_path(engine) is None and not developer:
+                    raise ValueError('Install the ' + ENGINES[engine] + ' optional engine pack first.')
+            return selected
+
         def import_data(self):
-            path, _ = QFileDialog.getOpenFileName(self, 'Open survey', '', 'Survey CSV (*.csv)')
-            if path:
-                self.load_survey(path)
+            path, _ = QFileDialog.getOpenFileName(self, 'Import or convert survey', '', 'Survey files (*.csv *.tsv *.txt *.ohm *.dat);;All files (*)')
+            if not path: return
+            try:
+                try:
+                    rows = load_csv(path)
+                    report = {'source': Path(path).name, 'format': 'Standard CSV', 'estimated_errors': False}
+                except (ValueError, UnicodeError):
+                    if Path(path).suffix.lower() in ('.ohm', '.dat'):
+                        formats = ['BERT electrode/measurement file', 'RES2DINV Wenner alpha', 'Delimited table with column mapping']
+                        default = 0 if Path(path).read_text(encoding='utf-8-sig').splitlines()[0].strip().isdigit() else 1
+                        choice, ok = QInputDialog.getItem(self, 'Choose survey format', 'Input format', formats, default, False)
+                        if not ok: return
+                        if choice in formats[:2]:
+                            error, ok = QInputDialog.getDouble(self, 'Error estimate', 'Fallback relative error (%) if not supplied', 3, .01, 99, 2)
+                            if not ok: return
+                            rows, report = (read_bert if choice == formats[0] else read_res2dinv_wenner)(path, default_error=error/100)
+                        else:
+                            rows, report = self.convert_dialog(path)
+                    else:
+                        rows, report = self.convert_dialog(path)
+                if rows is not None: self.accept_survey(path, rows, report)
+            except Exception as exc:
+                QMessageBox.warning(self, 'Survey could not be imported', str(exc))
+
+        def map_table(self):
+            path, _ = QFileDialog.getOpenFileName(self, 'Map table columns and units', '', 'Tables (*.csv *.tsv *.txt)')
+            if not path: return
+            try:
+                rows, report = self.convert_dialog(path)
+                if rows is not None: self.accept_survey(path, rows, report)
+            except Exception as exc: QMessageBox.warning(self, 'Conversion failed', str(exc))
+
+        def convert_dialog(self, path):
+            from import_dialog import ImportDialog
+            dialog = ImportDialog(path, self)
+            if dialog.exec() == QDialog.Accepted: return dialog.rows, dialog.report
+            return None, None
 
         def load_survey(self, path):
             try:
-                rows = load_csv(path)
+                self.accept_survey(path, load_csv(path), {'source': Path(path).name, 'format': 'Standard CSV', 'estimated_errors': False})
             except Exception as exc:
                 QMessageBox.warning(self, 'Survey could not be imported', str(exc))
-                return
-            self.input_path, self.rows = path, rows
-            self.output_path = None
-            self.image.clear()
+
+        def accept_survey(self, path, rows, report):
+            self.input_path, self.rows, self.import_report = path, rows, report
+            self.output_path = None;self.active_output = None
+            self.image.clear();self.result_choice.clear();self.result_paths = {};self.batch_results = {}
+            self.comparison.setRowCount(0)
             self.summary.setText('Complete an inversion for the newly imported survey.')
             self.source.setText(path)
             electrodes = {row[key] for row in rows for key in ('ax', 'bx', 'mx', 'nx')}
             self.quality.setText(f'{len(rows)} measurements • {len(electrodes)} electrodes\n'
                                  f'Profile: {min(electrodes):g} to {max(electrodes):g} m\n'
-                                 'Input checks passed. Check units, survey geometry and error estimates before inversion.')
+                                 + ('Errors were estimated during conversion. ' if report.get('estimated_errors') else '')
+                                 + 'Input checks passed. Preview shows the first 100 measurements; units are metres, ohm m, fractional errors.')
+            from core import COLUMNS
+            shown = rows[:100];self.data_preview.setRowCount(len(shown))
+            for i, row in enumerate(shown):
+                for j, key in enumerate(COLUMNS): self.data_preview.setItem(i, j, QTableWidgetItem(f'{row[key]:.7g}'))
             self.select_step(1)
+
+        def export_survey(self):
+            if not self.rows:
+                QMessageBox.information(self, 'Import required', 'Import or convert a survey first.');return
+            path, _ = QFileDialog.getSaveFileName(self, 'Export common interchange CSV', 'converted-survey.csv', 'CSV (*.csv)')
+            if path:
+                try:
+                    write_csv(path, self.rows)
+                    Path(path + '.import.json').write_text(json.dumps(self.import_report, indent=2), encoding='utf-8')
+                except OSError as exc: QMessageBox.warning(self, 'Export failed', str(exc))
 
         def start_run(self):
             if not self.rows:
@@ -330,6 +501,7 @@ def main():
                 return
             try:
                 self.current_settings()
+                self.selected_engines()
             except ValueError as exc:
                 QMessageBox.warning(self, 'Check inversion parameters', str(exc))
                 self.select_step(2)
@@ -345,44 +517,58 @@ def main():
         def prepare_run(self, folder):
             from tempfile import mkdtemp
             from dataclasses import asdict
-            import csv
             settings = self.current_settings()
-            output = Path(mkdtemp(prefix='ert-run-', dir=folder))
-            # Snapshot validated data so later edits to the source cannot change this run.
-            with (output / 'survey.csv').open('w', newline='', encoding='utf-8') as stream:
-                writer = csv.DictWriter(stream, fieldnames=list(self.rows[0]))
-                writer.writeheader()
-                writer.writerows(self.rows)
-            (output / 'settings.json').write_text(json.dumps(asdict(settings)), encoding='utf-8')
-            self.output_path = output
-            self.image.clear()
-            self.summary.setText('Inversion running…')
-            self.log.clear()
-            self.log_offset = 0
-            self.log_timer.start()
-            self.cancelled = False
+            self.pending_engines = self.selected_engines()
+            self.output_path = Path(mkdtemp(prefix='ert-run-', dir=folder))
+            self.batch_results = {engine: {'status': 'pending'} for engine in self.pending_engines}
+            self.result_paths = {};self.result_choice.clear();self.image.clear()
+            write_csv(self.output_path / 'survey.csv', self.rows)
+            (self.output_path / 'settings.json').write_text(json.dumps(asdict(settings)), encoding='utf-8')
+            (self.output_path / 'import-report.json').write_text(json.dumps(self.import_report, indent=2), encoding='utf-8')
+            self.summary.setText('Inversion batch running…')
+            self.log.clear();self.cancelled = False
+            for widget in self.inputs: widget.setEnabled(False)
+            self.cancel.setEnabled(True)
+            self.start_next_engine()
+
+        def start_next_engine(self):
+            if not self.pending_engines or self.cancelled:
+                self.finish_batch();return
+            import shutil
+            self.active_engine = self.pending_engines.pop(0)
+            self.active_output = self.output_path / self.active_engine
+            self.active_output.mkdir()
+            for name in ('survey.csv', 'settings.json'):
+                shutil.copy2(self.output_path / name, self.active_output / name)
+            self.batch_results[self.active_engine]['status'] = 'running'
+            self.log.append('\n=== ' + ENGINES[self.active_engine] + ' ===')
+            self.log_offset = 0;self.log_timer.start()
             self.process = QProcess(self)
             self.process.setProcessChannelMode(QProcess.MergedChannels)
             self.process.readyReadStandardOutput.connect(self.read_log)
             self.process.finished.connect(self.finished)
             self.process.errorOccurred.connect(self.process_error)
-            for widget in self.inputs:
-                widget.setEnabled(False)
-            self.cancel.setEnabled(True)
-            args = ['--worker', str(output)]
-            if not getattr(sys, 'frozen', False):
-                args.insert(0, str(Path(__file__).resolve()))
-            self.process.start(sys.executable, args)
-            self.statusBar().showMessage('Inverting • see live solver output')
+            if self.active_engine == 'pygimli':
+                program = sys.executable
+                args = ['--worker', str(self.active_output)]
+                if not getattr(sys, 'frozen', False): args.insert(0, str(Path(__file__).resolve()))
+            else:
+                executable = engine_path(self.active_engine)
+                if executable:
+                    program, args = str(executable), ['--worker', str(self.active_output)]
+                else:
+                    import os
+                    program = os.environ['ERT_ENGINE_TEST_PYTHON']
+                    args = [str(Path(__file__).resolve()), '--engine-worker', self.active_engine, str(self.active_output)]
+            self.process.start(program, args)
+            self.statusBar().showMessage('Inverting with ' + ENGINES[self.active_engine] + ' • see live solver output')
 
         def read_log(self):
             if self.process:
                 self.log.insertPlainText(bytes(self.process.readAllStandardOutput()).decode('utf-8', errors='replace'))
-            if self.output_path and (self.output_path / 'solver.log').exists():
-                with (self.output_path / 'solver.log').open('rb') as stream:
-                    stream.seek(self.log_offset)
-                    chunk = stream.read()
-                    self.log_offset = stream.tell()
+            if self.active_output and (self.active_output / 'solver.log').exists():
+                with (self.active_output / 'solver.log').open('rb') as stream:
+                    stream.seek(self.log_offset);chunk = stream.read();self.log_offset = stream.tell()
                 self.log.insertPlainText(chunk.decode('utf-8', errors='replace'))
             self.log.ensureCursorVisible()
 
@@ -393,29 +579,56 @@ def main():
 
         def cancel_run(self):
             self.cancelled = True
-            self.process.kill()
+            for engine in self.pending_engines: self.batch_results[engine]['status'] = 'cancelled'
+            self.pending_engines = []
+            if self.process and self.process.state() != QProcess.NotRunning: self.process.kill()
 
         def finished(self, code, status):
-            self.log_timer.stop()
-            self.read_log()
-            for widget in self.inputs:
-                widget.setEnabled(True)
-            self.cancel.setEnabled(False)
-            self.refresh_bounds()
-            if code != 0 or status != QProcess.NormalExit or self.cancelled:
-                message = 'Cancelled; partial files retained.' if self.cancelled else 'Inversion failed; see solver log.'
-                self.summary.setText(message)
-                self.statusBar().showMessage(message)
-                return
-            try:
-                result = json.loads((self.output_path / 'run.json').read_text(encoding='utf-8'))
-                self.summary.setText(f"χ²: {result['chi_squared']:.3g} • relative RMS: "
-                                     f"{result['relative_rms_percent']:.2f}%\nSaved to {self.output_path}")
-                self.image.setPixmap(QPixmap(str(self.output_path / 'model.png')).scaledToWidth(800, Qt.SmoothTransformation))
-                self.select_step(4)
-                self.statusBar().showMessage('Inversion complete')
-            except Exception as exc:
-                self.summary.setText(f'Could not load completed results: {exc}')
+            self.log_timer.stop();self.read_log()
+            if code == 0 and status == QProcess.NormalExit and not self.cancelled:
+                try:
+                    result = json.loads((self.active_output / 'run.json').read_text(encoding='utf-8'))
+                    common = json.loads((self.active_output / 'comparison_metrics.json').read_text(encoding='utf-8'))
+                    self.batch_results[self.active_engine] = {'status': 'completed', **common}
+                    self.result_paths[self.active_engine] = self.active_output
+                except Exception as exc:
+                    self.batch_results[self.active_engine] = {'status': 'failed', 'error': str(exc)}
+            else:
+                self.batch_results[self.active_engine] = {'status': 'cancelled' if self.cancelled else 'failed', 'error': 'See engine solver.log'}
+            self.process.deleteLater();self.process = None
+            self.start_next_engine()
+
+        def finish_batch(self):
+            import csv
+            (self.output_path / 'batch.json').write_text(json.dumps(self.batch_results, indent=2), encoding='utf-8')
+            with (self.output_path / 'comparison.csv').open('w', newline='', encoding='utf-8') as stream:
+                writer = csv.writer(stream);writer.writerow(['engine', 'status', 'common_log_chi_squared', 'relative_rms_percent'])
+                for engine, result in self.batch_results.items():
+                    writer.writerow([engine, result['status'], result.get('common_log_chi_squared', ''), result.get('relative_rms_percent', '')])
+            self.comparison.setRowCount(len(self.batch_results))
+            self.result_choice.clear()
+            for i, (engine, result) in enumerate(self.batch_results.items()):
+                values = [ENGINES[engine], result['status'], f"{result['common_log_chi_squared']:.4g}" if 'common_log_chi_squared' in result else '—',
+                          f"{result['relative_rms_percent']:.3f}" if 'relative_rms_percent' in result else '—']
+                for j, value in enumerate(values): self.comparison.setItem(i, j, QTableWidgetItem(value))
+                if engine in self.result_paths: self.result_choice.addItem(ENGINES[engine], engine)
+            for widget in self.inputs: widget.setEnabled(True)
+            self.refresh_bounds();self.refresh_engines();self.cancel.setEnabled(False)
+            completed = len(self.result_paths)
+            self.summary.setText(f'{completed}/{len(self.batch_results)} engines completed. Results: {self.output_path}\n'
+                                 'Common log χ² uses identical apparent-resistivity data/errors; native solver objectives differ. Check individual logs for failures.')
+            self.show_selected_result();self.select_step(4)
+            self.statusBar().showMessage('Cancelled' if self.cancelled else 'Batch complete' if completed == len(self.batch_results) else 'Batch completed with engine failures')
+            if getattr(self, 'test_target', None):
+                self.grab().save(str(self.test_target / 'results-preview.png'))
+                ok = completed == len(self.batch_results) and not self.image.pixmap().isNull()
+                QTimer.singleShot(0, lambda: QApplication.instance().exit(0 if ok else 1))
+
+        def show_selected_result(self):
+            if not hasattr(self, 'result_choice'): return
+            engine = self.result_choice.currentData()
+            if engine in self.result_paths:
+                self.image.setPixmap(QPixmap(str(self.result_paths[engine] / 'model.png')).scaledToWidth(800, Qt.SmoothTransformation))
 
         def navigate(self):
             prompt = self.prompt.text().strip()
@@ -435,6 +648,8 @@ def main():
             self.prompt.clear()
 
         def closeEvent(self, event):
+            if getattr(self, 'pack_installer', None) and self.pack_installer.isRunning():
+                QMessageBox.information(self, 'Installing engine', 'Wait for engine installation to finish.');event.ignore();return
             if self.process and self.process.state() != QProcess.NotRunning:
                 QMessageBox.information(self, 'Run active', 'Cancel the inversion before closing.')
                 event.ignore()
@@ -445,41 +660,63 @@ def main():
     app.setStyle('Fusion')
     window = Window()
     window.show()
-    if '--workflow-test' in sys.argv:
-        target = Path(sys.argv[sys.argv.index('--workflow-test') + 1]).resolve()
+    if '--workflow-test' in sys.argv or '--multi-test' in sys.argv:
+        flag = '--multi-test' if '--multi-test' in sys.argv else '--workflow-test'
+        target = Path(sys.argv[sys.argv.index(flag) + 1]).resolve()
         target.mkdir(parents=True, exist_ok=True)
         def exercise_workflow():
+            window.test_target = target
             for step, tile in enumerate(window.tiles):
                 tile.click()
                 assert window.pages.currentIndex() == step
                 assert [button.isChecked() for button in window.tiles] == [i == step for i in range(5)]
-            window.prompt.setText('configure inversion')
-            window.navigate()
+            window.prompt.setText('configure inversion');window.navigate()
             assert window.pages.currentIndex() == 2
             window.parameter_controls['error_floor'].setValue(5)
             assert window.current_settings().error_floor == 0.05
             window.reset_parameters()
             assert window.current_settings() == Settings()
             window.load_survey(str(resource_path('examples/homogeneous.csv')))
-            window.start.setValue(80)
-            window.iterations.setValue(5)
-            window.robust_data.setChecked(True)
-            window.stop_at_chi_one.setChecked(False)
-            window.use_bounds.setChecked(True)
-            for key, value in dict(error_floor=5, lower_resistivity=50, upper_resistivity=200,
-                                   mesh_depth=4, max_cell_area=0.5, vertical_weight=0.7,
-                                   lambda_factor=0.9, min_phi_change=0.5).items():
-                window.parameter_controls[key].setValue(value)
-            window.select_step(3)
-            window.prepare_run(str(target))
-            def complete(code, status):
-                window.grab().save(str(target / 'results-preview.png'))
-                success = code == 0 and status == QProcess.NormalExit and (window.output_path / 'run.json').exists() and not window.image.pixmap().isNull()
-                QTimer.singleShot(0, lambda: app.exit(0 if success else 1))
-            window.process.finished.connect(complete)
-            window.process.errorOccurred.connect(lambda _: app.exit(1))
+            window.start.setValue(80);window.iterations.setValue(5)
+            if flag == '--multi-test':
+                for check in window.engine_checks.values(): check.setChecked(True)
+                window.parameter_controls['mesh_depth'].setValue(4)
+                window.parameter_controls['max_cell_area'].setValue(.5)
+            else:
+                window.robust_data.setChecked(True);window.stop_at_chi_one.setChecked(False);window.use_bounds.setChecked(True)
+                for key, value in dict(error_floor=5, lower_resistivity=50, upper_resistivity=200,
+                                       mesh_depth=4, max_cell_area=.5, vertical_weight=.7, lambda_factor=.9, min_phi_change=.5).items():
+                    window.parameter_controls[key].setValue(value)
+            window.select_step(3);window.prepare_run(str(target))
         QTimer.singleShot(0, exercise_workflow)
         QTimer.singleShot(180000, lambda: app.exit(1))
+    if '--conversion-test' in sys.argv:
+        target = Path(sys.argv[sys.argv.index('--conversion-test') + 1]).resolve()
+        target.mkdir(parents=True, exist_ok=True)
+        def test_conversions():
+            from import_dialog import ImportDialog
+            from core import COLUMNS
+            reference = load_csv(resource_path('examples/conductive_block.csv'))
+            for name in ('resistance_percent.tsv','voltage_current.csv','electrode_ids.csv'):
+                dialog = ImportDialog(str(resource_path('examples/' + name)), window)
+                if name == 'voltage_current.csv':
+                    dialog.voltage.setCurrentIndex(1);dialog.current.setCurrentIndex(1)
+                if name == 'electrode_ids.csv':
+                    assert dialog.coordinates.currentIndex() == 0
+                    dialog.coordinates.setCurrentIndex(2)
+                    dialog.electrodes.setText(str(resource_path('examples/electrodes.csv')))
+                dialog.preview()
+                assert dialog.rows and len(dialog.rows) == len(reference)
+                assert all(abs(a[key] - b[key]) < 1e-9 for a,b in zip(dialog.rows, reference) for key in COLUMNS)
+                write_csv(target / (name + '.converted.csv'), dialog.rows)
+            for name in ('homogeneous','conductive_block','resistive_block','layered'):
+                assert load_csv(resource_path('examples/' + name + '.csv'))
+            for reader, name in ((read_bert,'conductive_block.ohm'),(read_res2dinv_wenner,'wenner_res2dinv.dat')):
+                rows, report = reader(resource_path('examples/' + name))
+                assert all(abs(a[key]-b[key]) < 1e-9 for a,b in zip(rows, reference) for key in COLUMNS)
+            (target / 'report.json').write_text(json.dumps({'converted_formats':5,'sample_surveys':4,'status':'passed'}))
+            app.quit()
+        QTimer.singleShot(0, test_conversions)
     if '--screenshot' in sys.argv:
         target = Path(sys.argv[sys.argv.index('--screenshot') + 1]).resolve()
         target.mkdir(parents=True, exist_ok=True)
@@ -512,6 +749,19 @@ if __name__ == '__main__':
             sys.exit(1)
         finally:
             log_stream.flush()
+    elif len(sys.argv) == 4 and sys.argv[1] == '--engine-worker':
+        folder = Path(sys.argv[3]).resolve()
+        stream = redirect_worker_log(folder)
+        try: run_inversion(folder / 'survey.csv', folder, Settings(**json.loads((folder / 'settings.json').read_text())), backend=sys.argv[2])
+        except Exception:
+            traceback.print_exc();sys.exit(1)
+        finally: stream.flush()
+    elif len(sys.argv) == 3 and sys.argv[1] == '--install-pack':
+        from engine_packs import install_pack
+        try: install_pack(sys.argv[2])
+        except Exception:
+            (runtime_folder / 'pack-install-error.log').write_text(traceback.format_exc(), encoding='utf-8')
+            sys.exit(1)
     elif len(sys.argv) == 3 and sys.argv[1] == '--diagnostics':
         Path(sys.argv[2]).write_text(json.dumps({
             'frozen': bool(getattr(sys, 'frozen', False)),

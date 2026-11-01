@@ -1,6 +1,6 @@
-ERT Studio 0.2.0 - Windows x64 preview
+ERT Studio 0.3.0 - Windows x64 preview
 
-INSTALLER: double-click ERTStudio-0.2.0-Windows-x64-Setup.exe, then launch
+INSTALLER: double-click ERTStudio-0.3.0-Windows-x64-Setup.exe, then launch
 ERT Studio from the Start menu. No Python installation or administrator access
 is required. Remove it using Windows Settings > Apps.
 
@@ -11,7 +11,7 @@ WORKFLOW: click any of the five tiles in the main workspace to open that step.
 Choose Configure inversion for model, data weighting, mesh, bounds and stopping
 controls. Hover over a control for help, or restore the recommended defaults.
 
-FIRST RUN: click "Try the included sample survey", review the input summary,
+FIRST RUN: select a survey from the sample library and click "Load selected sample", review the input summary,
 choose an inversion preset, then select Run inversion. Pick a writable output
 folder. Open results using the results-folder button after completion.
 All inversion runs are local. The navigation sidebar supports fixed commands;
@@ -25,3 +25,14 @@ This preview is unsigned; Windows may display an unrecognized-publisher prompt.
 Check the download source and accompanying SHA256 checksums.
 If startup fails, see %LOCALAPPDATA%/ERTStudio/startup-error.log.
 Solver logs are saved as solver.log in each run's output folder.
+
+OPTIONAL ENGINES: the base app includes pyGIMLi. For SimPEG or PyHydroGeophysX,
+open Configure inversion > Get optional engine packs from GitHub. Download the
+ERTEngine-simpeg or ERTEngine-hydro artifact from a successful build. Extract the
+outer artifact ZIP, then use Install downloaded engine-pack ZIP to install the
+contained ERTEngine-...-Windows-x64.zip. Select one or several engine checkboxes.
+Each engine runs locally in sequence; surveys are not uploaded to GitHub.
+
+IMPORT: use Import or convert, or Map columns and units for any table. See the
+included examples/README.md for mapping and units for all sample files. Converted
+data can be exported as a standard CSV with a separate conversion report.

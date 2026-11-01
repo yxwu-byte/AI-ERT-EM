@@ -26,8 +26,11 @@ class Settings:
     max_cell_area: float | None = None
     lower_resistivity: float | None = None
     upper_resistivity: float | None = None
+    hydro_solver: str = 'cgls'
 
     def validate(self):
+        if self.hydro_solver not in ('cgls','lsqr'):
+            raise ValueError('Unsupported PyHydroGeophysX linear solver.')
         if self.preset not in PRESETS:
             raise ValueError('Choose a supported inversion preset.')
         if not math.isfinite(self.regularization) or self.regularization <= 0:
@@ -103,43 +106,8 @@ def load_csv(path):
     return rows
 
 
-def run_inversion(input_path, output_path, settings):
-    settings.validate()
-    rows = load_csv(input_path)
-    import matplotlib
-    matplotlib.use('Agg')
-    import numpy as np
-    import pygimli as pg
-    from pygimli.physics import ert
-    import matplotlib.pyplot as plt
-
-    output = Path(output_path).resolve()
-    output.mkdir(parents=True, exist_ok=True)
-    data = pg.DataContainerERT()
-    coordinates = sorted({row[key] for row in rows for key in COLUMNS[:4]})
-    index = {x: data.createSensor([x, 0, 0]) for x in coordinates}
-    for i, row in enumerate(rows):
-        data.createFourPointData(i, *(index[row[key]] for key in COLUMNS[:4]))
-    data['rhoa'] = [row['rhoa'] for row in rows]
-    data['err'] = [max(row['error'], settings.error_floor) for row in rows]
-    data['k'] = ert.createGeometricFactors(data)
-    manager = ert.ERTManager(data, verbose=True)
-    manager.invert(**settings.inversion_options())
-    # The Windows C++ mesh exporter does not accept Unicode absolute paths.
-    # Python can enter the directory using wide-character OS calls; native
-    # exports then use ASCII relative names. This runs in the isolated worker.
-    from contextlib import chdir
-    with chdir(output):
-        manager.saveResult(folder='.')
-    fig, ax = plt.subplots(figsize=(10, 4))
-    manager.showResult(ax=ax, logScale=True, label='Resistivity (ohm m)')
-    fig.savefig(output / 'model.png', dpi=150, bbox_inches='tight')
-    plt.close('all')
-    np.savetxt(output / 'observed_predicted.csv',
-               np.column_stack((data['rhoa'], manager.inv.response, data['err'])),
-               delimiter=',', header='observed_ohm_m,predicted_ohm_m,relative_error', comments='')
-    (output / 'run.json').write_text(json.dumps({
-        'settings': asdict(settings), 'pygimli_version': pg.__version__,
-        'measurements': len(rows), 'inversion_options': settings.inversion_options(), 'chi_squared': float(manager.inv.chi2()),
-        'relative_rms_percent': float(manager.inv.relrms()),
-    }, indent=2), encoding='utf-8')
+def run_inversion(input_path, output_path, settings, backend='pygimli'):
+    import importlib
+    if backend not in ('pygimli','simpeg','hydro'):
+        raise ValueError('Unknown inversion engine.')
+    return importlib.import_module('backend_' + backend).run(input_path, output_path, settings)

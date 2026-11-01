@@ -1,0 +1,7 @@
+-r requirements-engine-common.txt
+simpeg==0.25.2
+discretize==0.13.0
+geoana==0.9.0
+pymatsolver==0.5.1
+libdlf==0.3.0
+typing_extensions==4.16.0
