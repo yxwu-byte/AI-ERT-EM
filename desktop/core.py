@@ -66,7 +66,7 @@ def run_inversion(input_path, output_path, settings):
     from pygimli.physics import ert
     import matplotlib.pyplot as plt
 
-    output = Path(output_path)
+    output = Path(output_path).resolve()
     output.mkdir(parents=True, exist_ok=True)
     data = pg.DataContainerERT()
     coordinates = sorted({row[key] for row in rows for key in COLUMNS[:4]})
@@ -80,7 +80,12 @@ def run_inversion(input_path, output_path, settings):
     manager.invert(lam=settings.regularization, maxIter=settings.max_iterations,
                    startModel=settings.start_resistivity,
                    blockyModel=PRESETS[settings.preset], robustData=False, verbose=True)
-    manager.saveResult(folder=str(output))
+    # The Windows C++ mesh exporter does not accept Unicode absolute paths.
+    # Python can enter the directory using wide-character OS calls; native
+    # exports then use ASCII relative names. This runs in the isolated worker.
+    from contextlib import chdir
+    with chdir(output):
+        manager.saveResult(folder='.')
     fig, ax = plt.subplots(figsize=(10, 4))
     manager.showResult(ax=ax, logScale=True, label='Resistivity (ohm m)')
     fig.savefig(output / 'model.png', dpi=150, bbox_inches='tight')
