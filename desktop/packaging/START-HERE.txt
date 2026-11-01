@@ -1,0 +1,23 @@
+ERT Studio 0.1.0 - Windows x64 preview
+
+INSTALLER: double-click ERTStudio-0.1.0-Windows-x64-Setup.exe, then launch
+ERT Studio from the Start menu. No Python installation or administrator access
+is required. Remove it using Windows Settings > Apps.
+
+PORTABLE: extract the entire ZIP first, then open ERTStudio/ERTStudio.exe.
+Keep all files and the _internal folder together. Do not run inside the ZIP.
+
+FIRST RUN: click "Try the included sample survey", review the input summary,
+choose an inversion preset, then select Run inversion. Pick a writable output
+folder. Open results using the results-folder button after completion.
+All inversion runs are local. The navigation sidebar supports fixed commands;
+a general natural-language assistant is not implemented yet.
+
+CSV import: ax,bx,mx,nx,rhoa,error. Coordinates in metres on a flat surface;
+rhoa in ohm metres; error as a fraction (0.03 = 3%). Topography and remote
+ electrodes are not supported in this version.
+
+This preview is unsigned; Windows may display an unrecognized-publisher prompt.
+Check the download source and accompanying SHA256 checksums.
+If startup fails, see %LOCALAPPDATA%/ERTStudio/startup-error.log.
+Solver logs are saved as solver.log in each run's output folder.

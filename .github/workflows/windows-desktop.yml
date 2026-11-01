@@ -1,0 +1,83 @@
+name: Build standalone Windows ERT Studio
+on:
+  pull_request:
+    paths: ['desktop/**', '.github/workflows/windows-desktop.yml']
+  push:
+    branches: [main, 'codex/windows-ert-*']
+    paths: ['desktop/**', '.github/workflows/windows-desktop.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: x64
+          cache: pip
+          cache-dependency-path: desktop/requirements.txt
+      - name: Install build dependencies
+        run: |
+          python -m pip install -r desktop/requirements.txt -r desktop/packaging/requirements-build.txt
+          python -m pip check
+          python -m pip freeze > desktop/packaging/resolved-requirements.txt
+      - name: Validate survey input
+        run: python -m unittest discover -s desktop/tests -v
+      - name: Freeze application and numerical libraries
+        run: python -m PyInstaller --noconfirm --clean desktop/packaging/ertstudio.spec
+      - name: Include source, licenses and usage instructions
+        shell: pwsh
+        run: |
+          python desktop/packaging/collect_licenses.py dist/ERTStudio/third-party-licenses
+          Copy-Item desktop/packaging/THIRD_PARTY_NOTICES.txt dist/ERTStudio/
+          Copy-Item desktop/packaging/START-HERE.txt dist/ERTStudio/
+          Copy-Item desktop/packaging/resolved-requirements.txt dist/ERTStudio/
+          New-Item -ItemType Directory dist/ERTStudio/application-source
+          Copy-Item desktop/*.py dist/ERTStudio/application-source/
+          Copy-Item desktop/requirements.txt dist/ERTStudio/application-source/
+          Copy-Item desktop/README.md dist/ERTStudio/application-source/
+      - name: Verify portable executable from a separate working directory
+        run: python desktop/packaging/verify_bundle.py dist/ERTStudio/ERTStudio.exe "${{ runner.temp }}/ERT portable checks"
+      - name: Build per-user Windows installer
+        shell: pwsh
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" desktop/packaging/installer.iss
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+      - name: Install silently and verify installed executable
+        shell: pwsh
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'ERT installed ü'
+          $installer = Get-ChildItem dist/installer/*Setup.exe | Select-Object -First 1
+          $process = Start-Process $installer.FullName -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$target`"" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Install failed: $($process.ExitCode)" }
+          python desktop/packaging/verify_bundle.py "$target/ERTStudio.exe" "${{ runner.temp }}/ERT installed checks"
+          if ($LASTEXITCODE -ne 0) { throw "Installed executable verification failed" }
+      - name: Create portable ZIP and checksums
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.1.0-Windows-x64-Portable.zip
+          Get-FileHash dist/*Portable.zip, dist/installer/*Setup.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
+      - name: Upload standalone Windows downloads
+        uses: actions/upload-artifact@v4
+        with:
+          name: ERTStudio-Windows-x64
+          path: |
+            dist/*Portable.zip
+            dist/installer/*Setup.exe
+            dist/SHA256SUMS.txt
+          retention-days: 30
+          if-no-files-found: error
+      - name: Preserve verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ERTStudio-Windows-verification
+          path: |
+            ${{ runner.temp }}/ERT portable checks/
+            ${{ runner.temp }}/ERT installed checks/
+            build/ertstudio/warn-*.txt
+          if-no-files-found: ignore

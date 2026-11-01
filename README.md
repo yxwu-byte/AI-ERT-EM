@@ -71,3 +71,11 @@ virtual environment and builds a Python wheel. Start with the
 The separate ERT-data automatic processing repository installs the published
 PyHydroGeophysX 0.3.0 package from PyPI. This source copy is available for local
 development; adding it here does not change that pipeline's dependency source.
+
+## Windows-first ERT desktop prototype
+
+[ERT Studio](desktop/README.md) adds a guided Qt desktop interface for flat-surface
+2D surveys, CSV validation, pyGIMLi smooth/blocky presets, background inversion,
+results export and an offline command-based navigation sidebar. A Windows CI build
+produces a bundled executable, portable ZIP and per-user installer, with packaged
+GUI and inversion checks. See the desktop documentation for build status and downloads.
