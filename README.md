@@ -74,7 +74,7 @@ development; adding it here does not change that pipeline's dependency source.
 
 ## Windows-first ERT desktop prototype
 
-[ERT Studio](desktop/README.md) adds a guided Qt desktop interface for flat-surface
+[ERT Studio](desktop/README.md) adds a Qt desktop interface with visual workflow tiles and expanded inversion controls for flat-surface
 2D surveys, CSV validation, pyGIMLi smooth/blocky presets, background inversion,
 results export and an offline command-based navigation sidebar. A Windows CI build
 produces a bundled executable, portable ZIP and per-user installer, with packaged

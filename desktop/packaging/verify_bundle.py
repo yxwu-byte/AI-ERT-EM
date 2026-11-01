@@ -31,7 +31,19 @@ diagnostics = json.loads((output / 'diagnostics.json').read_text())
 assert diagnostics['frozen'], 'Verification must use the packaged executable'
 invoke(['--smoke-test'])
 invoke(['--workflow-test', output / 'guided workflow'])
-assert list((output / 'guided workflow').glob('ert-run-*/run.json')), 'GUI worker did not finish'
+guided_runs = list((output / 'guided workflow').glob('ert-run-*/run.json'))
+assert guided_runs, 'GUI worker did not finish'
+guided = json.loads(guided_runs[0].read_text())
+assert guided['settings']['error_floor'] == 0.05
+assert guided['inversion_options']['limits'] == [50, 200]
+assert guided['inversion_options']['robustData'] is True
+assert guided['inversion_options']['paraDepth'] == 4
+assert guided['inversion_options']['paraMaxCellSize'] == 0.5
+with (guided_runs[0].parent / 'observed_predicted.csv').open() as stream:
+    assert all(abs(float(row['relative_error']) - 0.05) < 1e-12 for row in csv.DictReader(stream))
+model = next(guided_runs[0].parent.rglob('resistivity.vector'))
+values = [float(line) for line in model.read_text().split()]
+assert all(50 <= value <= 200 for value in values)
 for preset, name in [('Smooth model', 'smooth'), ('Blocky model (IRLS)', 'blocky')]:
     run = output / f'{name} run ü'
     run.mkdir(exist_ok=True)

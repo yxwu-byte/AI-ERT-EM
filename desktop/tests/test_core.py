@@ -29,6 +29,25 @@ class SurveyValidationTests(unittest.TestCase):
             with self.subTest(settings=settings), self.assertRaises(ValueError):
                 settings.validate()
 
+    def test_parameter_ranges_and_bounds(self):
+        for settings in [Settings(vertical_weight=0), Settings(vertical_weight=2),
+                         Settings(lambda_factor=float('nan')), Settings(error_floor=1),
+                         Settings(min_phi_change=-1), Settings(mesh_depth=0),
+                         Settings(max_cell_area=float('inf')), Settings(lower_resistivity=1),
+                         Settings(lower_resistivity=100, upper_resistivity=200),
+                         Settings(lower_resistivity=1, upper_resistivity=50),
+                         Settings(robust_data='true')]:
+            with self.subTest(settings=settings), self.assertRaises(ValueError):
+                settings.validate()
+
+    def test_old_saved_settings_keep_defaults(self):
+        settings = Settings(**dict(preset='Smooth model', regularization=20,
+                                  max_iterations=10, start_resistivity=100))
+        settings.validate()
+        self.assertIsNone(settings.mesh_depth)
+        self.assertFalse(settings.robust_data)
+        self.assertNotIn('limits', settings.inversion_options())
+
 
 if __name__ == '__main__':
     unittest.main()

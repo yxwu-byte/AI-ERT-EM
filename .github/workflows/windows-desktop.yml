@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['desktop/**', '.github/workflows/windows-desktop.yml']
   push:
-    branches: [main, 'codex/windows-ert-*']
+    branches: [main]
     paths: ['desktop/**', '.github/workflows/windows-desktop.yml']
   workflow_dispatch:
 permissions:
@@ -59,7 +59,7 @@ jobs:
       - name: Create portable ZIP and checksums
         shell: pwsh
         run: |
-          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.1.0-Windows-x64-Portable.zip
+          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.2.0-Windows-x64-Portable.zip
           Get-FileHash dist/*Portable.zip, dist/installer/*Setup.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
       - name: Upload standalone Windows downloads
         uses: actions/upload-artifact@v4

@@ -1,11 +1,15 @@
-ERT Studio 0.1.0 - Windows x64 preview
+ERT Studio 0.2.0 - Windows x64 preview
 
-INSTALLER: double-click ERTStudio-0.1.0-Windows-x64-Setup.exe, then launch
+INSTALLER: double-click ERTStudio-0.2.0-Windows-x64-Setup.exe, then launch
 ERT Studio from the Start menu. No Python installation or administrator access
 is required. Remove it using Windows Settings > Apps.
 
 PORTABLE: extract the entire ZIP first, then open ERTStudio/ERTStudio.exe.
 Keep all files and the _internal folder together. Do not run inside the ZIP.
+
+WORKFLOW: click any of the five tiles in the main workspace to open that step.
+Choose Configure inversion for model, data weighting, mesh, bounds and stopping
+controls. Hover over a control for help, or restore the recommended defaults.
 
 FIRST RUN: click "Try the included sample survey", review the input summary,
 choose an inversion preset, then select Run inversion. Pick a writable output
