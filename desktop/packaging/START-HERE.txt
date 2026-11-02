@@ -1,6 +1,6 @@
-ERT Studio 0.3.0 - Windows x64 preview
+ERT Studio 0.4.0 - Windows x64 preview
 
-INSTALLER: double-click ERTStudio-0.3.0-Windows-x64-Setup.exe, then launch
+INSTALLER: double-click ERTStudio-0.4.0-Windows-x64-Setup.exe, then launch
 ERT Studio from the Start menu. No Python installation or administrator access
 is required. Remove it using Windows Settings > Apps.
 
@@ -14,8 +14,11 @@ controls. Hover over a control for help, or restore the recommended defaults.
 FIRST RUN: select a survey from the sample library and click "Load selected sample", review the input summary,
 choose an inversion preset, then select Run inversion. Pick a writable output
 folder. Open results using the results-folder button after completion.
-All inversion runs are local. The navigation sidebar supports fixed commands;
-a general natural-language assistant is not implemented yet.
+All inversion runs are local. The sidebar supports fixed offline commands and optional GPT-5.6 Luna assistance.
+Open AI Settings, enter your existing API key locally, enable the assistant, and
+optionally remember it using Windows Credential Manager. API messages use the
+internet and are billed to your API project. Keys are never included in the app.
+Scientific changes and inversion starts require reviewing and confirming proposals.
 
 CSV import: ax,bx,mx,nx,rhoa,error. Coordinates in metres on a flat surface;
 rhoa in ohm metres; error as a fraction (0.03 = 3%). Topography and remote

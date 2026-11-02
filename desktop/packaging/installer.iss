@@ -1,4 +1,4 @@
-#define AppVersion "0.3.0"
+#define AppVersion "0.4.0"
 [Setup]
 AppId={{10A7BA23-45B4-4BD5-B966-5EC0226FAC01}
 AppName=ERT Studio
@@ -10,7 +10,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\..\dist\installer
-OutputBaseFilename=ERTStudio-0.3.0-Windows-x64-Setup
+OutputBaseFilename=ERTStudio-0.4.0-Windows-x64-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

@@ -27,6 +27,19 @@ def main():
             try: self.done.emit(install_pack(self.path))
             except Exception as exc: self.failed.emit(str(exc))
 
+    class ChatWorker(QThread):
+        done = Signal(object)
+        failed = Signal(str)
+        def __init__(self, key, prompt, state, history, parent):
+            super().__init__(parent)
+            self.key,self.prompt,self.state,self.history = key,prompt,state,history
+        def run(self):
+            from ai_client import request_reply,AssistantError
+            try: self.done.emit(request_reply(self.key,self.prompt,self.state,self.history))
+            except AssistantError as exc: self.failed.emit(str(exc))
+            except Exception: self.failed.emit('The AI request could not be completed. No changes were applied.')
+            finally: self.key = None
+
     class Window(QMainWindow):
         def __init__(self):
             super().__init__()
@@ -317,22 +330,40 @@ def main():
             box.addWidget(scroll, 1)
 
             sidebar = QVBoxLayout()
-            sidebar.addWidget(QLabel('Navigation assistant • offline commands'))
+            sidebar.addWidget(QLabel('AI assistant • GPT-5.6 Luna'))
+            from ai_settings import read_preferences
+            from ai_credentials import read_key
+            self.ai_preferences = read_preferences()
+            try: self.ai_key = read_key()
+            except OSError: self.ai_key = None
+            self.ai_history = [];self.ai_pending = None;self.ai_requests = 0;self.ai_tokens = 0
+            self.ai_worker = None
+            self.ai_settings_button = QPushButton('AI Settings…')
+            self.ai_settings_button.clicked.connect(self.open_ai_settings)
+            sidebar.addWidget(self.ai_settings_button)
             self.chat = QTextEdit()
             self.chat.setReadOnly(True)
-            self.chat.setPlainText('Try “go to import”, “check data”, “configure inversion”, '
-                                   '“show results”, or “help”.\nThis prototype uses fixed commands, not a language model.')
+            self.chat.setPlainText('Open AI Settings to enter your existing key and enable natural-language help. '
+                                   'Try “Explain the error floor” or “Set λ to 30 and open configuration”. '
+                                   'Changes are proposed for your approval. Fixed navigation commands work without API access.')
             sidebar.addWidget(self.chat, 1)
             self.prompt = QLineEdit()
             self.prompt.setPlaceholderText('Where would you like to go?')
             self.prompt.returnPressed.connect(self.navigate)
             sidebar.addWidget(self.prompt)
-            send = QPushButton('Send')
+            send = QPushButton('Send');self.ai_send = send
             send.clicked.connect(self.navigate)
             sidebar.addWidget(send)
+            self.ai_apply = QPushButton('Review and apply proposed changes')
+            self.ai_apply.setEnabled(False);self.ai_apply.clicked.connect(lambda: self.apply_ai_actions())
+            sidebar.addWidget(self.ai_apply)
+            clear = QPushButton('Clear conversation');self.ai_clear = clear
+            clear.clicked.connect(self.clear_ai_chat);sidebar.addWidget(clear)
+            self.ai_usage = QLabel('Offline commands ready • AI disabled')
+            self.ai_usage.setWordWrap(True);sidebar.addWidget(self.ai_usage)
             side = QWidget()
             side.setLayout(sidebar)
-            side.setFixedWidth(275)
+            side.setFixedWidth(310)
             layout.addWidget(side)
             self.select_step(0)
             self.statusBar().showMessage('Ready • all survey processing stays on this computer')
@@ -368,7 +399,7 @@ def main():
             self.hydro_solver.setCurrentText(defaults.hydro_solver)
             self.refresh_bounds()
 
-        def current_settings(self):
+        def current_settings(self, validate=True):
             values = {key: control.value() for key, control in self.parameter_controls.items()}
             values['error_floor'] /= 100
             for key in ('mesh_depth', 'max_cell_area'):
@@ -378,7 +409,7 @@ def main():
             settings = Settings(preset=self.preset.currentText(), max_iterations=self.iterations.value(),
                                 robust_data=self.robust_data.isChecked(),
                                 stop_at_chi_one=self.stop_at_chi_one.isChecked(), hydro_solver=self.hydro_solver.currentText(), **values)
-            settings.validate()
+            if validate: settings.validate()
             return settings
 
         def refresh_engines(self):
@@ -630,7 +661,145 @@ def main():
             if engine in self.result_paths:
                 self.image.setPixmap(QPixmap(str(self.result_paths[engine] / 'model.png')).scaledToWidth(800, Qt.SmoothTransformation))
 
+        def open_ai_settings(self):
+            from ai_settings import AISettingsDialog
+            dialog = AISettingsDialog(self.ai_key,self.ai_preferences,self)
+            if dialog.exec() == QDialog.Accepted:
+                self.ai_key,self.ai_preferences = dialog.result_key,dialog.result_preferences
+                self.clear_ai_chat()
+                self.ai_usage.setText('AI ready • GPT-5.6 Luna' if self.ai_preferences['enabled'] and self.ai_key else 'Offline commands ready • AI disabled')
+            elif dialog.result_key is None:
+                self.ai_key = None
+                self.ai_usage.setText('Offline commands ready • no API key')
+                self.clear_ai_chat()
+
+        def clear_ai_chat(self):
+            self.ai_history = [];self.ai_pending = None;self.ai_apply.setEnabled(False)
+            self.chat.setPlainText('Conversation cleared. Your request counter is retained for this session.')
+
+        def ai_state(self):
+            from dataclasses import asdict
+            import math
+            stats = {'measurements':len(self.rows or []),'electrodes':len({r[k] for r in self.rows or [] for k in ('ax','bx','mx','nx')})}
+            if self.rows:
+                values = [r['rhoa'] for r in self.rows]
+                stats.update(apparent_resistivity_min=min(values),apparent_resistivity_max=max(values))
+            results = {}
+            for engine,result in self.batch_results.items():
+                results[engine] = {'status':result['status']}
+                for key in ('common_log_chi_squared','relative_rms_percent'):
+                    value=result.get(key)
+                    if isinstance(value,(int,float)) and math.isfinite(value): results[engine][key]=value
+            return dict(step=self.pages.currentIndex(),settings=asdict(self.current_settings(False)),survey=stats,
+                        running=bool(self.process and self.process.state()!=QProcess.NotRunning),
+                        engines={key:{'available':key=='pygimli' or engine_path(key) is not None,'selected':c.isChecked()} for key,c in self.engine_checks.items()},
+                        results=results)
+
         def navigate(self):
+            from ai_client import contains_key
+            prompt=self.prompt.text().strip()
+            if contains_key(prompt):
+                self.prompt.clear()
+                QMessageBox.information(self,'Use AI Settings','Enter API keys only in the masked AI Settings dialog.');return
+            if not self.ai_preferences['enabled'] or not self.ai_key:
+                self.offline_navigate();return
+            if not prompt:return
+            if self.ai_worker is not None:return
+            if len(prompt)>2000:
+                self.chat.append('Assistant: Please keep messages to 2,000 characters or less.');return
+            if self.ai_requests>=self.ai_preferences['request_limit']:
+                self.chat.append('Assistant: Session request limit reached. Review your usage and AI Settings.');return
+            self.ai_pending=None;self.ai_apply.setEnabled(False)
+            self.chat.setPlainText(self.chat.toPlainText()+'\nYou: '+prompt)
+            self.prompt.clear()
+            self.ai_snapshot=self.ai_state()
+            self.ai_sent_prompt=prompt
+            self.ai_requests+=1
+            self.ai_send.setEnabled(False);self.prompt.setEnabled(False);self.ai_clear.setEnabled(False);self.ai_settings_button.setEnabled(False)
+            self.ai_usage.setText('Thinking… • request '+str(self.ai_requests))
+            self.ai_worker=ChatWorker(self.ai_key,prompt,self.ai_snapshot,list(self.ai_history),self)
+            self.ai_worker.done.connect(self.ai_received)
+            self.ai_worker.failed.connect(self.ai_failed)
+            self.ai_worker.finished.connect(self.ai_finished)
+            self.ai_worker.start()
+
+        def ai_received(self, reply):
+            from ai_client import STEPS
+            self.ai_history.extend([{'role':'user','content':self.ai_sent_prompt},{'role':'assistant','content':reply['reply']}])
+            self.ai_history=self.ai_history[-8:]
+            self.ai_tokens+=reply['usage']['total_tokens']
+            self.chat.setPlainText(self.chat.toPlainText()+'\nAssistant: '+reply['reply'])
+            pending=[]
+            for action in reply['actions']:
+                if action['kind']=='navigate': self.select_step(STEPS.index(action['step']))
+                else: pending.append(action)
+            if pending:
+                # Snapshot after safe navigation, before proposing scientific state changes.
+                self.ai_pending=(pending,self.ai_state())
+                self.ai_apply.setEnabled(True)
+                self.chat.setPlainText(self.chat.toPlainText()+'\nProposed changes (not yet applied):\n'+self.ai_action_text(pending))
+
+        def ai_failed(self, message):
+            self.chat.setPlainText(self.chat.toPlainText()+'\nAssistant: '+message)
+
+        def ai_finished(self):
+            self.ai_worker.deleteLater();self.ai_worker=None
+            for widget in (self.ai_send,self.prompt,self.ai_clear,self.ai_settings_button):widget.setEnabled(True)
+            self.ai_usage.setText(f'Session: {self.ai_requests} requests • {self.ai_tokens} tokens reported by API')
+            if getattr(self,'ai_test_callback',None):self.ai_test_callback()
+
+        def ai_action_text(self, actions):
+            lines=[]
+            for action in actions:
+                kind=action['kind']
+                if kind=='set_parameters': lines.extend(change['name']+' = '+str(change['value']) for change in action['parameters'])
+                elif kind=='select_engines':lines.append('Select engines: '+', '.join(action['engines']))
+                elif kind=='load_sample':lines.append('Replace current survey with sample: '+action['sample'])
+                elif kind=='start_run':lines.append('Start selected inversions (you will choose the output folder).')
+            return '\n'.join(lines)
+
+        def apply_ai_actions(self, confirmed=False):
+            if not self.ai_pending:return
+            actions,snapshot=self.ai_pending
+            if self.ai_state()!=snapshot:
+                self.ai_failed('The project changed after this proposal. Send your request again.');self.ai_pending=None;self.ai_apply.setEnabled(False);return
+            if self.process is not None or getattr(self,'pack_installer',None) and self.pack_installer.isRunning():
+                self.ai_failed('Wait until inversion or engine installation finishes before applying changes.');return
+            from ai_client import validate_proposal,AssistantError
+            try:
+                proposal=validate_proposal({'reply':'','actions':actions},self.current_settings(False))
+                for name,control in self.parameter_controls.items():
+                    value=getattr(proposal['settings'],name)
+                    if value is None:continue
+                    display=value*100 if name=='error_floor' else value
+                    if not control.minimum()<=display<=control.maximum() or abs(round(display,control.decimals())-display)>1e-9:
+                        raise AssistantError(name+' is outside the supported UI range or precision. Ask for a supported value.')
+                for action in actions:
+                    if action['kind']=='select_engines' and any(not self.engine_checks[e].isEnabled() for e in action['engines']):
+                        raise AssistantError('Install the requested optional engine pack first.')
+            except AssistantError as exc:self.ai_failed(str(exc));return
+            if not confirmed and QMessageBox.question(self,'Apply assistant proposal?',self.ai_action_text(actions))!=QMessageBox.Yes:return
+            candidate=proposal['settings']
+            for action in actions:
+                if action['kind']=='load_sample':self.load_survey(str(resource_path('examples/'+action['sample']+'.csv')))
+            if proposal['patch']:
+                for key,control in self.parameter_controls.items():
+                    value=getattr(candidate,key)
+                    if key=='error_floor':value*=100
+                    if value is None:value={'lower_resistivity':1,'upper_resistivity':100000}.get(key,0)
+                    control.setValue(value)
+                self.preset.setCurrentText(candidate.preset);self.iterations.setValue(candidate.max_iterations)
+                self.robust_data.setChecked(candidate.robust_data);self.stop_at_chi_one.setChecked(candidate.stop_at_chi_one)
+                self.hydro_solver.setCurrentText(candidate.hydro_solver);self.use_bounds.setChecked(candidate.lower_resistivity is not None)
+                self.refresh_bounds()
+            for action in actions:
+                if action['kind']=='select_engines':
+                    for engine,check in self.engine_checks.items():check.setChecked(engine in action['engines'])
+            self.ai_pending=None;self.ai_apply.setEnabled(False)
+            self.chat.setPlainText(self.chat.toPlainText()+'\nApplied the reviewed proposal.')
+            if any(action['kind']=='start_run' for action in actions):self.select_step(3);self.start_run()
+
+        def offline_navigate(self):
             prompt = self.prompt.text().strip()
             if not prompt:
                 return
@@ -648,6 +817,8 @@ def main():
             self.prompt.clear()
 
         def closeEvent(self, event):
+            if self.ai_worker is not None:
+                QMessageBox.information(self,'AI request active','Wait for the current AI request to finish before closing.');event.ignore();return
             if getattr(self, 'pack_installer', None) and self.pack_installer.isRunning():
                 QMessageBox.information(self, 'Installing engine', 'Wait for engine installation to finish.');event.ignore();return
             if self.process and self.process.state() != QProcess.NotRunning:
@@ -660,6 +831,9 @@ def main():
     app.setStyle('Fusion')
     window = Window()
     window.show()
+    if any(flag in sys.argv for flag in ('--smoke-test','--workflow-test','--multi-test','--conversion-test','--assistant-test')):
+        window.ai_preferences['enabled']=False
+        window.ai_key=None
     if '--workflow-test' in sys.argv or '--multi-test' in sys.argv:
         flag = '--multi-test' if '--multi-test' in sys.argv else '--workflow-test'
         target = Path(sys.argv[sys.argv.index(flag) + 1]).resolve()
@@ -690,6 +864,49 @@ def main():
             window.select_step(3);window.prepare_run(str(target))
         QTimer.singleShot(0, exercise_workflow)
         QTimer.singleShot(180000, lambda: app.exit(1))
+    if '--assistant-test' in sys.argv:
+        target=Path(sys.argv[sys.argv.index('--assistant-test')+1]).resolve();target.mkdir(parents=True,exist_ok=True)
+        def test_ai():
+            import ai_client
+            from unittest.mock import patch
+            def action(kind,**kwargs):return {'kind':kind,'step':None,'sample':None,'engines':[],'parameters':[],**kwargs}
+            calls=[]
+            def fake(key,prompt,state,history):
+                assert 'rows' not in state and 'input_path' not in state
+                calls.append(prompt)
+                proposal={'reply':'I propose λ = 30 and a 5% error floor.', 'actions':[
+                    action('navigate',step='configure'),action('set_parameters',parameters=[{'name':'regularization','value':30},{'name':'error_floor','value':.05}])]}
+                validated=ai_client.validate_proposal(proposal,Settings(**state['settings']))
+                validated['usage']={'input_tokens':100,'output_tokens':100,'total_tokens':200}
+                return validated
+            window.ai_key='sk-test-not-a-real-key';window.ai_preferences={'enabled':True,'request_limit':1}
+            window.ai_mock=patch('ai_client.request_reply',fake);window.ai_mock.start()
+            def checked():
+                assert window.pages.currentIndex()==2 and window.current_settings().regularization==20
+                assert window.ai_pending and window.ai_apply.isEnabled()
+                window.apply_ai_actions(confirmed=True)
+                assert window.current_settings().regularization==30 and window.current_settings().error_floor==.05
+                assert not window.ai_pending and window.ai_tokens==200
+                stale=window.ai_state()
+                window.ai_pending=([action('set_parameters',parameters=[{'name':'regularization','value':40}])],stale)
+                window.lam.setValue(31)
+                window.apply_ai_actions(confirmed=True)
+                assert window.lam.value()==31 and window.ai_pending is None
+                window.ai_pending=([action('start_run')],window.ai_state())
+                starts=[];window.start_run=lambda:starts.append(True)
+                with patch.object(QMessageBox,'question',return_value=QMessageBox.No):window.apply_ai_actions()
+                assert not starts
+                window.apply_ai_actions(confirmed=True)
+                assert len(starts)==1
+                window.prompt.setText('another request');window.navigate()
+                assert len(calls)==1
+                window.ai_mock.stop();window.ai_key=None
+                (target/'report.json').write_text(json.dumps({'status':'passed','network_calls':0,'requests':len(calls)}))
+                app.quit()
+            window.ai_test_callback=checked
+            window.prompt.setText('Set lambda to 30 and error floor to 5 percent');window.navigate()
+        QTimer.singleShot(0,test_ai)
+        QTimer.singleShot(15000,lambda:app.exit(1))
     if '--conversion-test' in sys.argv:
         target = Path(sys.argv[sys.argv.index('--conversion-test') + 1]).resolve()
         target.mkdir(parents=True, exist_ok=True)

@@ -30,6 +30,7 @@ invoke(['--diagnostics', output / 'diagnostics.json'])
 diagnostics = json.loads((output / 'diagnostics.json').read_text())
 assert diagnostics['frozen'], 'Verification must use the packaged executable'
 invoke(['--smoke-test'])
+invoke(['--assistant-test', output / 'assistant checks'])
 invoke(['--conversion-test', output / 'conversion checks'])
 invoke(['--workflow-test', output / 'guided workflow'])
 guided_runs = list((output / 'guided workflow').glob('ert-run-*/pygimli/run.json'))

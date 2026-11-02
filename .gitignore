@@ -6,3 +6,6 @@ results/
 build/
 dist/
 /ERTStudio.spec
+
+/.env*
+!/.env.example

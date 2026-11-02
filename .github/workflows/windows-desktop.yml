@@ -125,7 +125,7 @@ jobs:
       - name: Create portable ZIP and checksums
         shell: pwsh
         run: |
-          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.3.0-Windows-x64-Portable.zip
+          Compress-Archive -Path dist/ERTStudio -DestinationPath dist/ERTStudio-0.4.0-Windows-x64-Portable.zip
           Get-FileHash dist/*Portable.zip, dist/installer/*Setup.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash)  $([IO.Path]::GetFileName($_.Path))" } | Set-Content dist/SHA256SUMS.txt
       - name: Upload standalone Windows downloads
         uses: actions/upload-artifact@v4

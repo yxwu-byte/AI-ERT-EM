@@ -54,8 +54,8 @@ of convergence. Review the solver log and diagnostics.
 
 The sidebar supports explicit navigation commands, including `go to import`,
 `check data`, `configure inversion`, `run inversion` and `show results`.
-It **does not yet contain a language model** and never launches inversion through chat.
-There are no network requests or API credentials in this application.
+Fixed commands remain available when the API assistant is disabled. Version 0.4
+adds an optional OpenAI API connection with local key entry; see the AI setup below.
 
 ## Standalone Windows distribution
 
@@ -65,9 +65,9 @@ Windows build and downloads.
 
 The Windows build produces two downloads:
 
-- `ERTStudio-0.3.0-Windows-x64-Setup.exe`: per-user installer, Start-menu shortcut,
+- `ERTStudio-0.4.0-Windows-x64-Setup.exe`: per-user installer, Start-menu shortcut,
   optional desktop shortcut, and an uninstaller. No administrator access required.
-- `ERTStudio-0.3.0-Windows-x64-Portable.zip`: extract the entire folder and
+- `ERTStudio-0.4.0-Windows-x64-Portable.zip`: extract the entire folder and
   double-click `ERTStudio.exe`. Keep `_internal` beside the executable.
 
 Users do not install Python, scientific packages, or an API key. Inversion is offline.
@@ -239,3 +239,50 @@ three-engine workflow against the portable application and again after a silent
 installation. Conversion checks exercise the actual mapping dialog, all five input
 representations, sample validation, unit/error conversions and exports. Unit tests
 also reject corrupt/unsafe packs and invalid geometry/data.
+
+## Version 0.4: GPT-5.6 Luna sidebar
+
+Open **AI Settings** in the right sidebar. Enter your existing OpenAI Platform API
+key in the masked field, enable the assistant, and save. Optionally choose
+**Remember using Windows Credential Manager**; otherwise the key stays in memory
+until exit. A local `.env` file with `OPENAI_API_KEY=...` can also be imported
+through the dialog. Never put a key in chat. Forget locally saved key removes the
+Windows credential; it does not revoke your key on OpenAI Platform. No key is
+bundled, uploaded to GitHub, or written to ordinary settings files. Your existing
+web portal and this app will share the key's API-project billing and limits.
+
+The model ID is `gpt-5.6-luna`, using the Responses API with low reasoning effort,
+1,600 maximum output tokens per reply, at most eight prior chat messages and a
+default local cap of 50 request attempts per app session. Clear conversation does
+not reset that cap. The UI shows API-reported token usage; this cap is not a dollar
+budget. Review project budgets/alerts in OpenAI Platform. There are no automatic
+retries or automatic model substitutions that could generate extra charges.
+
+Requests include what you type, current parameters, workflow step, measurement
+and electrode counts, apparent-resistivity range, engine availability/selection
+and common result metrics. Raw survey rows, file paths, files, screenshots and
+solver logs are not automatically transmitted. API storage is requested off
+(`store=false`); provider retention policies still apply. Turning AI off restores
+fixed offline navigation. Inversion and optional engine packs still run locally.
+
+Examples:
+- “Explain the error floor and how it affects inversion.”
+- “Set lambda to 30 and use a 5% minimum error.”
+- “Load the conductive sample and select pyGIMLi and SimPEG.”
+- “Compare the completed engines' data fits.”
+
+Navigation takes effect directly. All parameter changes, sample replacements,
+engine selection and inversion starts are shown as proposals and require
+**Review and apply proposed changes** plus a confirmation dialog. An inversion
+then asks you to choose an output folder. Scientific settings are validated as a
+complete patch; unsupported engines, UI ranges, stale proposals and changes
+during inversion/pack installation are rejected. The model cannot execute code,
+open arbitrary files, install packages, delete files or retrieve credentials.
+
+The client handles invalid/expired keys, model access, quota/rate limits, network
+errors and incomplete/invalid structured replies without applying changes.
+Background requests keep the GUI responsive. Tests use mocked API responses,
+never real credentials or billable calls; Windows tests additionally verify a
+Credential Manager round-trip using a temporary non-secret test credential. The
+API/model documentation was checked, but live model access for your existing key
+must be verified locally when you enter it and send the first message.

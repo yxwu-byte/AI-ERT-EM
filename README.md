@@ -84,3 +84,7 @@ Version 0.3 adds four synthetic sample surveys, a column/unit mapping and format
 conversion workflow, and optional SimPEG / PyHydroGeophysX solver packs hosted
 by GitHub Actions. Users can select one or several local engines and compare
 common apparent-resistivity fit metrics without bundling all engines in the base app.
+
+Version 0.4 adds an optional GPT-5.6 Luna sidebar with local key entry, Windows
+Credential Manager storage, bounded API usage and validated application-action
+proposals. Scientific changes require user review; no API key is distributed.
