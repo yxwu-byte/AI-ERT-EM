@@ -1,0 +1,34 @@
+[
+  {
+    "id": "homogeneous",
+    "label": "Homogeneous half-space \u2022 Wenner",
+    "description": "100 ohm m reference; 16 electrodes, 35 observations.",
+    "file": "homogeneous.csv",
+    "measurements": 35,
+    "synthetic": true
+  },
+  {
+    "id": "conductive_block",
+    "label": "Conductive target \u2022 Wenner",
+    "description": "Synthetic 30 ohm m shallow block within 100 ohm m background.",
+    "file": "conductive_block.csv",
+    "measurements": 35,
+    "synthetic": true
+  },
+  {
+    "id": "resistive_block",
+    "label": "Resistive target \u2022 dipole\u2013dipole",
+    "description": "Synthetic 300 ohm m target within 100 ohm m background.",
+    "file": "resistive_block.csv",
+    "measurements": 91,
+    "synthetic": true
+  },
+  {
+    "id": "layered",
+    "label": "Two layers \u2022 Wenner",
+    "description": "60 ohm m upper layer over 180 ohm m lower layer.",
+    "file": "layered.csv",
+    "measurements": 35,
+    "synthetic": true
+  }
+]

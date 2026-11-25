@@ -1,0 +1,19 @@
+ERT Studio bundles third-party software. Full installed distribution metadata
+and license files are included in the third-party-licenses folder beside this file.
+
+Python: Python Software Foundation License, https://www.python.org/psf/license/
+pyGIMLi: Apache-2.0, https://github.com/gimli-org/gimli
+pgcore: compiled pyGIMLi core and its third-party components; see bundled notices.
+Qt and PySide6: LGPL-3.0 / GPL / commercial options, https://www.qt.io/licensing/
+The Qt libraries are dynamically linked. You may replace the bundled Qt libraries
+with compatible modified versions under the applicable license. ERT Studio does
+not restrict reverse engineering for debugging modifications to LGPL libraries.
+Bundled Qt/PySide6 version: 6.12.0, unmodified published binary wheels.
+Qt source and modifications: https://download.qt.io/official_releases/qt/
+PySide source: https://download.qt.io/official_releases/QtForPython/
+NumPy, SciPy, Matplotlib, Pillow and other dependencies retain their own licenses.
+PyInstaller: GPL with bootloader exception; https://pyinstaller.org/en/stable/license.html
+
+ERT Studio's Python application source is included in application-source.
+This is an unsigned preview. The installer includes the bundled Python runtime;
+users do not need to install Python or download dependencies.
